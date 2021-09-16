@@ -7,6 +7,7 @@
 
 #include "SDTAIController.generated.h"
 
+const float DISTANCE_THRESHOLD = 200.f;
 /**
  * 
  */
@@ -16,4 +17,6 @@ class SOFTDESIGNTRAINING_API ASDTAIController : public AAIController
     GENERATED_BODY()
 public:
     virtual void Tick(float deltaTime) override;
+protected:
+    virtual void MoveTowardsDirection(FVector2D direction, float speed, float deltaTime, float maxSpeed);
 };

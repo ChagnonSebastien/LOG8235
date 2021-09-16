@@ -6,7 +6,7 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
 
-/*static*/ bool SDTUtils::Raycast(UWorld* uWorld, FVector sourcePoint, FVector targetPoint)
+/*static*/ bool SDTUtils::Raycast(UWorld* uWorld, FVector sourcePoint, FVector targetPoint )
 {
     FHitResult hitData;
     FCollisionQueryParams TraceParams(FName(TEXT("VictoreCore Trace")), true);

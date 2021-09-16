@@ -18,7 +18,7 @@ public:
 
     void Collect();
     void OnCooldownDone();
-    bool IsOnCooldown();
+    bool IsOnCooldown(); 
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float m_CollectCooldownDuration = 10.f;
