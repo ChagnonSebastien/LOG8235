@@ -8,16 +8,43 @@
 void ASDTAIController::Tick(float deltaTime)
 {
 	UWorld* world = GetWorld();
-	UMeshComponent* const playerMesh = (UMeshComponent*) GetPawn()->GetComponentByClass(UMeshComponent::StaticClass());
-	FVector const feetOffset = playerMesh->GetRelativeLocation();
-	FVector const actorLocation = GetPawn()->GetActorLocation() + feetOffset;
-	auto const eyeSight = actorLocation + (GetPawn()->GetActorRotation().Vector().GetSafeNormal() * DISTANCE_THRESHOLD);
+	UMeshComponent* const characterMesh = (UMeshComponent*) GetPawn()->GetComponentByClass(UMeshComponent::StaticClass());
+	FVector const feetOffset = characterMesh->GetRelativeLocation();
+	FVector const feetCenter = GetPawn()->GetActorLocation() + feetOffset + FVector(0, 0, 1);
+
+	UCapsuleComponent* const boundingBox = (UCapsuleComponent*)GetPawn()->GetComponentByClass(UCapsuleComponent::StaticClass());
+	FVector const rightFoot = feetCenter + (GetPawn()->GetActorRightVector().GetSafeNormal() * boundingBox->GetScaledCapsuleRadius());
+	FVector const leftFoot = feetCenter + (GetPawn()->GetActorRightVector().GetSafeNormal() * boundingBox->GetScaledCapsuleRadius() * -1);
+
+	auto const sight = (GetPawn()->GetActorRotation().Vector().GetSafeNormal() * SIGHT_THRESHOLD);
+	auto const rightFootSight = rightFoot + sight / 2;
+	auto const centerSight = feetCenter + sight;
+	auto const leftFootSight = leftFoot + sight / 2;
+
 	if (debug) {
-		// GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("(%d, %d, %d)"), feetOffset.X, feetOffset.Y, feetOffset.Z));
-		DrawDebugLine(world, actorLocation, eyeSight, FColor::Red);
+		DrawDebugLine(world, rightFoot, rightFootSight, FColor::Red);
+		DrawDebugLine(world, feetCenter, centerSight, FColor::Red);
+		DrawDebugLine(world, leftFoot, leftFootSight, FColor::Red);
 	}
 
-	auto const  hasWallInSight = SDTUtils::Raycast(world, actorLocation, eyeSight);
+	FCollisionQueryParams params = FCollisionQueryParams();
+	params.AddIgnoredActor(GetPawn());
+
+	TArray<struct FHitResult> rightHitResults;
+	TArray<struct FHitResult> centerHitResults;
+	TArray<struct FHitResult> leftHitResults;
+
+	world->LineTraceMultiByObjectType(rightHitResults, rightFoot, rightFootSight, FCollisionObjectQueryParams::AllObjects, params);
+	world->LineTraceMultiByObjectType(centerHitResults, feetCenter, centerSight, FCollisionObjectQueryParams::AllObjects, params);
+	world->LineTraceMultiByObjectType(leftHitResults, leftFoot, leftFootSight, FCollisionObjectQueryParams::AllObjects, params);
+
+	int totalHits = rightHitResults.Num() + centerHitResults.Num() + leftHitResults.Num();
+
+	if (debug) {
+		GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Red, FString::Printf(TEXT("%d"), totalHits));
+	}
+
+	auto const  hasWallInSight = totalHits > 0;
 
 	FRotator walkingDirection = GetPawn()->GetActorRotation();
 
@@ -33,14 +60,5 @@ void ASDTAIController::Tick(float deltaTime)
 
 	GetPawn()->SetActorRotation(walkingDirection);
 	GetPawn()->AddMovementInput(walkingDirection.Vector());
-}
-
-void ASDTAIController::MoveTowardsDirection(FVector2D direction, float speed, float deltaTime, float maxSpeed)
-{
-	APawn* pawn = GetPawn();
-	FVector const pawnPosition(pawn->GetActorLocation());
-	FVector2D const displacement = FMath::Min(maxSpeed, speed) * deltaTime * direction.GetSafeNormal();
-	pawn->SetActorLocation(pawnPosition + FVector(displacement, 0.f), true);
-	pawn->SetActorRotation(FVector(direction, 0.f).ToOrientationQuat());
 }
 

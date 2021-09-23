@@ -7,7 +7,7 @@
 
 #include "SDTAIController.generated.h"
 
-const float DISTANCE_THRESHOLD = 200.f;
+const float SIGHT_THRESHOLD = 300.f;
 /**
  * 
  */
@@ -18,9 +18,7 @@ class SOFTDESIGNTRAINING_API ASDTAIController : public AAIController
 public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
-        bool debug = false;
+        bool debug = true;
 
     virtual void Tick(float deltaTime) override;
-protected:
-    virtual void MoveTowardsDirection(FVector2D direction, float speed, float deltaTime, float maxSpeed);
 };
