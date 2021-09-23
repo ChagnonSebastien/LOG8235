@@ -16,6 +16,10 @@ class SOFTDESIGNTRAINING_API ASDTAIController : public AAIController
 {
     GENERATED_BODY()
 public:
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+        bool debug = false;
+
     virtual void Tick(float deltaTime) override;
 protected:
     virtual void MoveTowardsDirection(FVector2D direction, float speed, float deltaTime, float maxSpeed);
