@@ -7,9 +7,6 @@
 
 #include "SDTAIController.generated.h"
 
-const float SIGHT_THRESHOLD = 400.f;
-const float ENVY_MAGNITUDE = 0.2f;
-const float ROTATING_SPEED = 3.0f;
 /**
  * 
  */
@@ -22,13 +19,22 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
         bool debug = true;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+        float sightThreshold = 400.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+        float envyStrength = 0.2f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+        float rotatingSpeed = 3.0f;
+
     virtual void Tick(float deltaTime) override;
 
 private:
     FRotator envy = FRotator(0, 1, 0);
 
     // -1 rotating left, 1 rotating right, 0 not escaping;
-    float escapingCorner = 0;
+    int escapingCorner = 0;
 
     virtual void computeNeasestCollision(float& distance, FVector_NetQuantizeNormal& hitNormal, TArray<struct FHitResult> hits);
 };
