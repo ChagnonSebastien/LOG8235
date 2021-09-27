@@ -7,12 +7,34 @@
 
 void ASDTAIController::Tick(float deltaTime)
 {
-	// Compute key positions for raytracing aroud the agent's position
-	UWorld* world = GetWorld();
+	// Compute agents's feet position
 	UMeshComponent* const characterMesh = (UMeshComponent*) GetPawn()->GetComponentByClass(UMeshComponent::StaticClass());
 	FVector const feetOffset = characterMesh->GetRelativeLocation();
 	FVector const feetCenter = GetPawn()->GetActorLocation() + feetOffset + FVector(0, 0, 2);
 
+	float speed = 1.0f;
+	FRotator walkingDirection = GetPawn()->GetActorRotation();
+	if (false) {
+		// Agent is seeing a collectible, player, or death trap
+
+	}
+	else {
+		// Movement is not constraint by a higher proprity task
+		freeRoam(speed, walkingDirection, feetCenter, deltaTime);
+	}
+
+	// Apply movement
+	GetPawn()->SetActorRotation(walkingDirection);
+	GetPawn()->AddMovementInput(walkingDirection.Vector(), speed);
+
+	// Randomize envy
+	envy = envy.Add(0, (rand() % 10) - 5, 0);
+}
+
+void ASDTAIController::freeRoam(float& speed, FRotator& walkingDirection, FVector feetCenter, float deltaTime) {
+	UWorld* world = GetWorld();
+
+	// Compute key positions for raytracing aroud the agent's position
 	UCapsuleComponent* const boundingBox = (UCapsuleComponent*)GetPawn()->GetComponentByClass(UCapsuleComponent::StaticClass());
 	FVector const rightFoot = feetCenter + (GetPawn()->GetActorRightVector().GetSafeNormal() * boundingBox->GetScaledCapsuleRadius());
 	FVector const leftFoot = feetCenter + (GetPawn()->GetActorRightVector().GetSafeNormal() * boundingBox->GetScaledCapsuleRadius() * -1);
@@ -39,8 +61,6 @@ void ASDTAIController::Tick(float deltaTime)
 	world->LineTraceMultiByObjectType(leftHitResults, leftFoot, leftFootSight, FCollisionObjectQueryParams::AllObjects, params);
 
 	bool const hasWallInSight = rightHitResults.Num() + centerHitResults.Num() + leftHitResults.Num() > 0;
-
-	FRotator walkingDirection = GetPawn()->GetActorRotation();
 
 	// ***
 	// CORNER DETECTION
@@ -84,7 +104,6 @@ void ASDTAIController::Tick(float deltaTime)
 	// ***
 	// SPEED AND TURNING COMPUTATION
 	// ***
-	float speed = 1.0f;
 	float adjustedRotationSpeed = rotatingSpeed;
 	if (escapingCorner != 0) {
 		// Agent is currently escaping a corner
@@ -132,13 +151,6 @@ void ASDTAIController::Tick(float deltaTime)
 		FVector cross = FVector::CrossProduct(envy.Vector(), walkingDirection.Vector());
 		walkingDirection = walkingDirection.Add(0, cross.Z * envyStrength * adjustedRotationSpeed, 0);
 	}
-
-	// Apply movement
-	GetPawn()->SetActorRotation(walkingDirection);
-	GetPawn()->AddMovementInput(walkingDirection.Vector(), speed);
-
-	// Randomize envy
-	envy = envy.Add(0, (rand() % 10) - 5, 0);
 }
 
 void ASDTAIController::computeNeasestCollision(float &distance, FVector_NetQuantizeNormal &hitNormal, TArray<struct FHitResult> hits) {
