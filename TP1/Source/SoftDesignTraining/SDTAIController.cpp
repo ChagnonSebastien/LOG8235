@@ -11,15 +11,19 @@ void ASDTAIController::Tick(float deltaTime)
 	UMeshComponent* const characterMesh = (UMeshComponent*) GetPawn()->GetComponentByClass(UMeshComponent::StaticClass());
 	FVector const feetOffset = characterMesh->GetRelativeLocation();
 	FVector const feetCenter = GetPawn()->GetActorLocation() + feetOffset + FVector(0, 0, 2);
-
 	float speed = 1.0f;
 	FRotator walkingDirection = GetPawn()->GetActorRotation();
-	if (false) {
-		// Agent is seeing a collectible, player, or death trap
 
+	if (detectDeathTrap(speed, walkingDirection)) {
+		// Agent is seeing a death floor
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow, FString::Printf(TEXT("DETECTED DEATH TRAP")));
+	}
+	else if(false) {
+		// Agent is seeing a collectible or player
 	}
 	else {
 		// Movement is not constraint by a higher proprity task
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow, FString::Printf(TEXT("FREE ROAMING")));
 		freeRoam(speed, walkingDirection, feetCenter, deltaTime);
 	}
 
@@ -59,6 +63,7 @@ void ASDTAIController::freeRoam(float& speed, FRotator& walkingDirection, FVecto
 	world->LineTraceMultiByObjectType(centerHitResults, feetCenter, centerSight, FCollisionObjectQueryParams::AllObjects, params);
 	TArray<struct FHitResult> leftHitResults;
 	world->LineTraceMultiByObjectType(leftHitResults, leftFoot, leftFootSight, FCollisionObjectQueryParams::AllObjects, params);
+
 
 	bool const hasWallInSight = rightHitResults.Num() + centerHitResults.Num() + leftHitResults.Num() > 0;
 
@@ -161,4 +166,84 @@ void ASDTAIController::computeNeasestCollision(float &distance, FVector_NetQuant
 			hitNormal = hit.ImpactNormal;
 		}
 	}
+}
+
+bool ASDTAIController::detectDeathTrap(float& speed, FRotator& walkingDirection) {
+	UWorld* world = GetWorld();
+	UCapsuleComponent* const boundingBox = (UCapsuleComponent*)GetPawn()->GetComponentByClass(UCapsuleComponent::StaticClass());
+	// Define waist vectors
+	FVector waistCenter = GetPawn()->GetActorLocation();
+	FVector waistLeftExtremity = GetPawn()->GetActorLocation() + (GetPawn()->GetActorRightVector().GetSafeNormal() * boundingBox->GetScaledCapsuleRadius());
+	FVector waistRightExtremity = GetPawn()->GetActorLocation() - (GetPawn()->GetActorRightVector().GetSafeNormal() * boundingBox->GetScaledCapsuleRadius());
+	FVector waistCenterEndPoint = waistCenter + GetPawn()->GetActorForwardVector() * 400.f;
+	FVector waistLeftExtremityEndPoint = waistLeftExtremity + GetPawn()->GetActorForwardVector() * 400.f;
+	FVector waisRightExtremityEndPoint = waistRightExtremity + GetPawn()->GetActorForwardVector() * 400.f;
+	// Floor level
+	waistCenterEndPoint.Z = 130;
+	waistLeftExtremityEndPoint.Z = 130;
+	waisRightExtremityEndPoint.Z = 130;
+
+	FCollisionQueryParams params = FCollisionQueryParams();
+	params.AddIgnoredActor(GetPawn());
+
+	DrawDebugLine(world, waistCenter, waistCenterEndPoint, FColor::Red, true);
+
+	struct FHitResult centerHitResult;
+	bool centerDetectedDeathFloor = false;
+	if (world->LineTraceSingleByObjectType(centerHitResult, waistCenter, waistCenterEndPoint, FCollisionObjectQueryParams::AllObjects, params)) {
+		if (centerHitResult.Component->GetCollisionObjectType() == COLLISION_DEATH_OBJECT) {
+			centerDetectedDeathFloor = true;
+			DrawDebugLine(world, waistCenter, waistCenterEndPoint, FColor::Red, true);
+		}
+	}
+	struct FHitResult leftHitResult;
+	bool leftDetectedDeathFloor = false;
+	if (world->LineTraceSingleByObjectType(leftHitResult, waistLeftExtremity, waistLeftExtremityEndPoint, FCollisionObjectQueryParams::AllObjects, params)) {
+		if (leftHitResult.Component->GetCollisionObjectType() == COLLISION_DEATH_OBJECT) {
+			leftDetectedDeathFloor = true;
+			DrawDebugLine(world, waistLeftExtremity, waistLeftExtremityEndPoint, FColor::Red, true);
+		}
+	}
+	struct FHitResult rightHitResult;
+	bool rightDetectedDeathFloor = false;
+	if (world->LineTraceSingleByObjectType(rightHitResult, waistRightExtremity, waisRightExtremityEndPoint, FCollisionObjectQueryParams::AllObjects, params)) {
+		if (rightHitResult.Component->GetCollisionObjectType() == COLLISION_DEATH_OBJECT) {
+			rightDetectedDeathFloor = true;
+			DrawDebugLine(world, waistRightExtremity, waisRightExtremityEndPoint, FColor::Red, true);
+		}
+	}
+
+	if (centerDetectedDeathFloor || leftDetectedDeathFloor || rightDetectedDeathFloor) {
+		
+		float adjustedRotationSpeed = rotatingSpeed;
+
+		if (centerDetectedDeathFloor) {
+			// Agent is seeing a death floor right in front of him
+
+			// Left wall collision detection
+			float deathFloorDistance;
+			FVector_NetQuantizeNormal deathFloorHitNormal;
+			TArray<struct FHitResult> centerHitResults;
+			centerHitResults.Add(centerHitResult);
+			computeNeasestCollision(deathFloorDistance, deathFloorHitNormal, centerHitResults);
+
+			// Slowdown based on the wall distance from the front of the agent
+			speed = deathFloorDistance / 400.f;
+
+			// Rotate slower the faster the agent is moving
+			adjustedRotationSpeed = adjustedRotationSpeed / ((speed + 1) / 2);
+
+			// Rotate
+			walkingDirection = walkingDirection.Add(0, -adjustedRotationSpeed, 0);
+		} else {
+			// Agent is seeing a death floor from the corner of his eye
+
+			// Rotate
+			walkingDirection = walkingDirection.Add(0, -adjustedRotationSpeed, 0);
+		}
+
+		return true;
+	}
+
+	return false;
 }

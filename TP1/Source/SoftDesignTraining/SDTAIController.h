@@ -38,4 +38,5 @@ private:
 
     virtual void computeNeasestCollision(float& distance, FVector_NetQuantizeNormal& hitNormal, TArray<struct FHitResult> hits);
     virtual void freeRoam(float& speed, FRotator& walkingDirection, FVector feetCenter, float deltaTime);
+    virtual bool detectDeathTrap(float& speed, FRotator& walkingDirection);
 };
