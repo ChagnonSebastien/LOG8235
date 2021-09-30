@@ -38,4 +38,8 @@ private:
 
     virtual void computeNeasestCollision(float& distance, FVector_NetQuantizeNormal& hitNormal, TArray<struct FHitResult> hits);
     virtual void freeRoam(float& speed, FRotator& walkingDirection, FVector feetCenter, float deltaTime);
+    virtual void chaseObject(FRotator& walkingDirection, FVector objectLocation);
+    virtual void findCollectible(FHitResult hit, bool& collectibleFound, FVector& collectibleLocation);
+    virtual void findPlayer(FHitResult hit, bool& playerFound, FVector& playerLocation, bool& isPlayerPowerUp);
+    virtual void runFromObject(float& speed, FRotator& walkingDirection, FVector objectLocation);
 };

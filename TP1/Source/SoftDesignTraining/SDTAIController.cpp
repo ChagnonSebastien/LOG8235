@@ -1,12 +1,42 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SDTAIController.h"
+#include "SDTCollectible.h"
+#include "SoftDesignTrainingMainCharacter.h"
 #include "SoftDesignTraining.h"
 #include "DrawDebugHelpers.h"
 #include "SDTUtils.h"
 
 void ASDTAIController::Tick(float deltaTime)
 {
+	TArray<struct FHitResult> HitResults;
+	FCollisionShape SphereShape = FCollisionShape::MakeSphere(200.f);
+	const FVector Start = GetPawn()->GetActorLocation() + GetPawn()->GetActorForwardVector() * 200.f;
+	const FVector End = GetPawn()->GetActorLocation() + GetPawn()->GetActorForwardVector() * 200.f;
+	FCollisionQueryParams params = FCollisionQueryParams();
+	params.AddIgnoredActor(GetPawn());
+
+	bool collectibleFound = false;
+	FVector collectibleLocation;
+
+	bool playerFound = false;
+	bool isPlayerPowerUp = false;
+	FVector playerLocation;
+
+
+
+	GetWorld()->SweepMultiByObjectType(HitResults, Start, End, FQuat::Identity, FCollisionObjectQueryParams::AllObjects, SphereShape, params);
+	DrawDebugSphere(GetWorld(), Start, 200.f, 50, FColor::Red);
+	//GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Red, FString::Printf(TEXT("%u"), HitResults.Num()));
+	for (auto hit : HitResults) {
+		if (hit.Component->GetCollisionObjectType() == COLLISION_COLLECTIBLE) {
+			findCollectible(hit, collectibleFound, collectibleLocation);
+		}
+		if (hit.Component->GetCollisionObjectType() == COLLISION_PLAYER) {
+			findPlayer(hit, playerFound, playerLocation, isPlayerPowerUp);
+		}
+	}
+
 	// Compute agents's feet position
 	UMeshComponent* const characterMesh = (UMeshComponent*) GetPawn()->GetComponentByClass(UMeshComponent::StaticClass());
 	FVector const feetOffset = characterMesh->GetRelativeLocation();
@@ -14,9 +44,17 @@ void ASDTAIController::Tick(float deltaTime)
 
 	float speed = 1.0f;
 	FRotator walkingDirection = GetPawn()->GetActorRotation();
-	if (false) {
+	if (playerFound) {
+		if (isPlayerPowerUp) {
+			runFromObject(speed, walkingDirection, playerLocation);
+		}
+		else {
+			chaseObject(walkingDirection, playerLocation);
+		}
+	} 
+	else if (collectibleFound) {
 		// Agent is seeing a collectible, player, or death trap
-
+		chaseObject(walkingDirection, collectibleLocation);
 	}
 	else {
 		// Movement is not constraint by a higher proprity task
@@ -29,6 +67,44 @@ void ASDTAIController::Tick(float deltaTime)
 
 	// Randomize envy
 	envy = envy.Add(0, (rand() % 10) - 5, 0);
+}
+
+void ASDTAIController::findCollectible(FHitResult hit, bool& collectibleFound, FVector& collectibleLocation) {
+	struct FHitResult hitResult;
+	FCollisionQueryParams params = FCollisionQueryParams();
+	params.AddIgnoredActor(GetPawn());
+	if (GetWorld()->LineTraceSingleByObjectType(hitResult, GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FCollisionObjectQueryParams::AllObjects, params)) {
+		if (hitResult.GetComponent()->GetCollisionObjectType() == COLLISION_COLLECTIBLE) {
+			DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FColor::Red, true);
+			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("DETECTED COLLECTIBLE")));
+
+			if (hit.GetActor()->IsA(ASDTCollectible::StaticClass())) {
+
+				ASDTCollectible* collectible = Cast<ASDTCollectible>(hit.GetActor());
+				if (!collectible->IsOnCooldown()) {
+					collectibleFound = true;
+					collectibleLocation = hit.GetActor()->GetActorLocation();
+				}
+			}
+		}
+	}
+}
+void ASDTAIController::findPlayer(FHitResult hit, bool& playerFound, FVector& playerLocation, bool& isPlayerPowerUp) {
+	struct FHitResult hitResult;
+	FCollisionQueryParams params = FCollisionQueryParams();
+	params.AddIgnoredActor(GetPawn());
+	if (GetWorld()->LineTraceSingleByObjectType(hitResult, GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FCollisionObjectQueryParams::AllObjects, params)) {
+		if (hitResult.GetComponent()->GetCollisionObjectType() == COLLISION_PLAYER) {
+			DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FColor::Blue, true);
+			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("DETECTED PLAYER")));
+
+			if (ASoftDesignTrainingMainCharacter* player = Cast<ASoftDesignTrainingMainCharacter>(hit.GetActor())) {
+				playerFound = true;
+				playerLocation = hit.GetActor()->GetActorLocation();
+				isPlayerPowerUp = player->IsPoweredUp();
+			}
+		}
+	}
 }
 
 void ASDTAIController::freeRoam(float& speed, FRotator& walkingDirection, FVector feetCenter, float deltaTime) {
@@ -161,4 +237,19 @@ void ASDTAIController::computeNeasestCollision(float &distance, FVector_NetQuant
 			hitNormal = hit.ImpactNormal;
 		}
 	}
+}
+
+void ASDTAIController::chaseObject(FRotator& walkingDirection, FVector objectLocation) {
+	float adjustedRotationSpeed = rotatingSpeed;
+	FVector const objectVector = objectLocation - GetPawn()->GetActorLocation();
+	FVector crossProduct = FVector::CrossProduct(GetPawn()->GetActorForwardVector(), objectVector);
+	walkingDirection = walkingDirection.Add(0, crossProduct.Z > 0 ? adjustedRotationSpeed : -adjustedRotationSpeed, 0);
+}
+
+void ASDTAIController::runFromObject(float& speed, FRotator& walkingDirection, FVector objectLocation) {
+	speed = 0.f;
+	float adjustedRotationSpeed = rotatingSpeed;
+	FVector const objectVector = objectLocation - GetPawn()->GetActorLocation();
+	FVector crossProduct = FVector::CrossProduct(GetPawn()->GetActorForwardVector(), objectVector);
+	walkingDirection = walkingDirection.Add(0, crossProduct.Z > 0 ? -adjustedRotationSpeed : adjustedRotationSpeed, 0);
 }
