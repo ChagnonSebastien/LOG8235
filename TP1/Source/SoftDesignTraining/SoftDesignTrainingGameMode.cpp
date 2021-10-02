@@ -1,5 +1,6 @@
 // Copyright 1998-2015 Epic Games, Inc. All Rights Reserved.
 
+#include "Blueprint/UserWidget.h"
 #include "SoftDesignTrainingGameMode.h"
 #include "SoftDesignTraining.h"
 #include "SoftDesignTrainingPlayerController.h"
@@ -19,5 +20,29 @@ ASoftDesignTrainingGameMode::ASoftDesignTrainingGameMode()
 	if (PlayerPawnBPClass.Class != NULL)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
+	}
+}
+
+void ASoftDesignTrainingGameMode::BeginPlay()
+{
+	if (IsValid(WidgetClass))
+	{
+		ScoreWidget = Cast<UScoreUserWidget>(CreateWidget(GetWorld(), WidgetClass));
+
+		if (ScoreWidget != nullptr)
+		{
+			ScoreWidget->AddToViewport();
+		}
+	}
+}
+
+void ASoftDesignTrainingGameMode::Tick(float DeltaSeconds)
+{
+	if (ScoreWidget != nullptr)
+	{
+		ASoftDesignTrainingGameState* gameState = GetGameState<ASoftDesignTrainingGameState>();
+		ScoreWidget->SetScore(gameState->getCollected());
+		ScoreWidget->SetDeaths(gameState->getDeaths());
+		ScoreWidget->IncreaseTime(DeltaSeconds);
 	}
 }

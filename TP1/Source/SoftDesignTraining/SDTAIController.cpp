@@ -26,8 +26,7 @@ void ASDTAIController::Tick(float deltaTime)
 
 
 	GetWorld()->SweepMultiByObjectType(HitResults, Start, End, FQuat::Identity, FCollisionObjectQueryParams::AllObjects, SphereShape, params);
-	DrawDebugSphere(GetWorld(), Start, 200.f, 50, FColor::Red);
-	//GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Red, FString::Printf(TEXT("%u"), HitResults.Num()));
+	DrawDebugSphere(GetWorld(), Start, 200.f, 16, FColor::Yellow);
 	for (auto hit : HitResults) {
 		if (hit.Component->GetCollisionObjectType() == COLLISION_COLLECTIBLE) {
 			findCollectible(hit, collectibleFound, collectibleLocation);
@@ -75,8 +74,8 @@ void ASDTAIController::findCollectible(FHitResult hit, bool& collectibleFound, F
 	params.AddIgnoredActor(GetPawn());
 	if (GetWorld()->LineTraceSingleByObjectType(hitResult, GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FCollisionObjectQueryParams::AllObjects, params)) {
 		if (hitResult.GetComponent()->GetCollisionObjectType() == COLLISION_COLLECTIBLE) {
-			DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FColor::Red, true);
-			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("DETECTED COLLECTIBLE")));
+			DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FColor::Red);
+			GEngine->AddOnScreenDebugMessage(-1, 0.01, FColor::Red, FString::Printf(TEXT("DETECTED COLLECTIBLE")));
 
 			if (hit.GetActor()->IsA(ASDTCollectible::StaticClass())) {
 
@@ -95,7 +94,7 @@ void ASDTAIController::findPlayer(FHitResult hit, bool& playerFound, FVector& pl
 	params.AddIgnoredActor(GetPawn());
 	if (GetWorld()->LineTraceSingleByObjectType(hitResult, GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FCollisionObjectQueryParams::AllObjects, params)) {
 		if (hitResult.GetComponent()->GetCollisionObjectType() == COLLISION_PLAYER) {
-			DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FColor::Blue, true);
+			DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FColor::Blue);
 			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("DETECTED PLAYER")));
 
 			if (ASoftDesignTrainingMainCharacter* player = Cast<ASoftDesignTrainingMainCharacter>(hit.GetActor())) {
@@ -158,10 +157,6 @@ void ASDTAIController::freeRoam(float& speed, FRotator& walkingDirection, FVecto
 			if (!(leftWallHitNormal - rightWallHitNormal).IsNearlyZero()) {
 				// Both sides of the agent collision detection are not hitting the same surface normal. Therefore, the agent must be in front of a corner.
 				escapingCorner = (leftWallDistance > rightWallDistance) ? -1 : 1;
-
-				if (debug) {
-					GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow, FString::Printf(TEXT("ESCAPING CORNER: %f"), escapingCorner));
-				}
 			}
 		}
 	}
@@ -169,7 +164,7 @@ void ASDTAIController::freeRoam(float& speed, FRotator& walkingDirection, FVecto
 		// Agent is currently escaping from a corner
 
 		if (debug) {
-			GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Cyan, FString::Printf(TEXT("IS ESCAPING")));
+			GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Cyan, FString::Printf(TEXT("IS ESCAPING: %f"), escapingCorner));
 		}
 		if (!hasWallInSight) {
 			// Agent has successfully escaped from the corner
