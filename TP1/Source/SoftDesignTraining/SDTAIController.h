@@ -43,4 +43,7 @@ private:
     virtual void findCollectible(FHitResult hit, bool& collectibleFound, FVector& collectibleLocation);
     virtual void findPlayer(FHitResult hit, bool& playerFound, FVector& playerLocation, bool& isPlayerPowerUp);
     virtual void runFromObject(float& speed, FRotator& walkingDirection, FVector objectLocation);
+    virtual void sweepNearbyObjects(bool& isPlayerNearby, bool& isPoweredUpPlayerNearby, FVector& nearbyPlayerLocation);
+    virtual void sweepFowardObjects(bool& collectibleFound, FVector& collectibleLocation, bool& playerFound, bool& isPlayerPowerUp, FVector& playerLocation);
+    virtual void UpdatePawnIsEscapingPlayerStatus(bool& isPoweredUpPlayerNearby, const FVector nearbyPlayerLocation);
 };

@@ -9,48 +9,19 @@
 
 void ASDTAIController::Tick(float deltaTime)
 {
-	const FCollisionShape SphereShape = FCollisionShape::MakeSphere(200.f);
-	const FCollisionShape fleeSphereShape = FCollisionShape::MakeSphere(400.f);
-	FCollisionQueryParams params = FCollisionQueryParams();
-	params.AddIgnoredActor(GetPawn());
-
-	// Detect if a player powered up is nearby
-	TArray<struct FHitResult> nearbyHitResults;
-
 	bool isPlayerNearby = false;
 	bool isPoweredUpPlayerNearby = false;
 	FVector nearbyPlayerLocation;
 
-	GetWorld()->SweepMultiByObjectType(nearbyHitResults, GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation(), FQuat::Identity, FCollisionObjectQueryParams::AllObjects, SphereShape, params);
-	DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation(), 400.f, 16, FColor::Orange);
-	for (auto nearbyHit : nearbyHitResults) {
-		if (nearbyHit.Component->GetCollisionObjectType() == COLLISION_PLAYER) {
-			findPlayer(nearbyHit, isPlayerNearby, nearbyPlayerLocation, isPoweredUpPlayerNearby);
-		}
-	}
-	/* ----- Start of detect foward objects ----- */
-	TArray<struct FHitResult> HitResults;
-	const FVector Start = GetPawn()->GetActorLocation() + GetPawn()->GetActorForwardVector() * 200.f;
-	const FVector End = GetPawn()->GetActorLocation() + GetPawn()->GetActorForwardVector() * 200.f;
+	sweepNearbyObjects(isPlayerNearby, isPoweredUpPlayerNearby, nearbyPlayerLocation);
 
 	bool collectibleFound = false;
 	FVector collectibleLocation;
-
-	bool playerFound = false; 
+	bool playerFound = false;
 	bool isPlayerPowerUp = false;
 	FVector playerLocation;
 
-	GetWorld()->SweepMultiByObjectType(HitResults, Start, End, FQuat::Identity, FCollisionObjectQueryParams::AllObjects, fleeSphereShape, params);
-	DrawDebugSphere(GetWorld(), Start, 200.f, 16, FColor::Yellow);
-	for (auto hit : HitResults) {
-		if (hit.Component->GetCollisionObjectType() == COLLISION_COLLECTIBLE) {
-			findCollectible(hit, collectibleFound, collectibleLocation);
-		}
-		if (hit.Component->GetCollisionObjectType() == COLLISION_PLAYER) {
-			findPlayer(hit, playerFound, playerLocation, isPlayerPowerUp);
-		}
-	}
-	/* ----- End of detect foward objects ----- */
+	sweepFowardObjects(collectibleFound, collectibleLocation, playerFound, isPlayerPowerUp, playerLocation);
 
 	// Compute agents's feet position
 	UMeshComponent* const characterMesh = (UMeshComponent*) GetPawn()->GetComponentByClass(UMeshComponent::StaticClass());
@@ -59,20 +30,6 @@ void ASDTAIController::Tick(float deltaTime)
 
 	float speed = 1.0f;
 	FRotator walkingDirection = GetPawn()->GetActorRotation();
-
-	// Verify if pawn is still escaping from player
-	if (isPoweredUpPlayerNearby) {
-		// if angle between foward vector and pawn to player vector is > 90
-		// set isEscapingPoweredUpPlayer to false
-		FVector pawnToPlayer = nearbyPlayerLocation - GetPawn()->GetActorLocation();
-		float angle = acosf(FVector::DotProduct(GetPawn()->GetActorForwardVector().GetSafeNormal(), pawnToPlayer) * (180 / PI));
-		if (angle > 90) {
-			isEscapingPoweredUpPlayer = false;
-		}
-	}
-	else {
-		isEscapingPoweredUpPlayer = false;
-	}
 
 	if (isEscapingPoweredUpPlayer) {
 		runFromObject(speed, walkingDirection, nearbyPlayerLocation);
@@ -87,7 +44,6 @@ void ASDTAIController::Tick(float deltaTime)
 		}
 	} 
 	else if (collectibleFound) {
-		// Agent is seeing a collectible, player, or death trap
 		chaseObject(walkingDirection, collectibleLocation);
 	}
 	else {
@@ -99,6 +55,9 @@ void ASDTAIController::Tick(float deltaTime)
 	GetPawn()->SetActorRotation(walkingDirection);
 	GetPawn()->AddMovementInput(walkingDirection.Vector(), speed);
 
+	// Update isEscapingPoweredUpPlayer flag
+	UpdatePawnIsEscapingPlayerStatus(isPoweredUpPlayerNearby, nearbyPlayerLocation);
+
 	// Randomize envy
 	envy = envy.Add(0, (rand() % 10) - 5, 0);
 }
@@ -109,11 +68,7 @@ void ASDTAIController::findCollectible(FHitResult hit, bool& collectibleFound, F
 	params.AddIgnoredActor(GetPawn());
 	if (GetWorld()->LineTraceSingleByObjectType(hitResult, GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FCollisionObjectQueryParams::AllObjects, params)) {
 		if (hitResult.GetComponent()->GetCollisionObjectType() == COLLISION_COLLECTIBLE) {
-			DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FColor::Red);
-			GEngine->AddOnScreenDebugMessage(-1, 0.01, FColor::Red, FString::Printf(TEXT("DETECTED COLLECTIBLE")));
-
 			if (hit.GetActor()->IsA(ASDTCollectible::StaticClass())) {
-
 				ASDTCollectible* collectible = Cast<ASDTCollectible>(hit.GetActor());
 				if (!collectible->IsOnCooldown()) {
 					collectibleFound = true;
@@ -129,9 +84,6 @@ void ASDTAIController::findPlayer(FHitResult hit, bool& playerFound, FVector& pl
 	params.AddIgnoredActor(GetPawn());
 	if (GetWorld()->LineTraceSingleByObjectType(hitResult, GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FCollisionObjectQueryParams::AllObjects, params)) {
 		if (hitResult.GetComponent()->GetCollisionObjectType() == COLLISION_PLAYER) {
-			DrawDebugLine(GetWorld(), GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FColor::Blue);
-			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("DETECTED PLAYER")));
-
 			if (ASoftDesignTrainingMainCharacter* player = Cast<ASoftDesignTrainingMainCharacter>(hit.GetActor())) {
 				playerFound = true;
 				playerLocation = hit.GetActor()->GetActorLocation();
@@ -278,8 +230,62 @@ void ASDTAIController::chaseObject(FRotator& walkingDirection, FVector objectLoc
 
 void ASDTAIController::runFromObject(float& speed, FRotator& walkingDirection, FVector objectLocation) {
 	speed = 0.f;
-	float adjustedRotationSpeed = rotatingSpeed;
+	float adjustedRotationSpeed = 5.f;
 	FVector const objectVector = objectLocation - GetPawn()->GetActorLocation();
 	FVector crossProduct = FVector::CrossProduct(GetPawn()->GetActorForwardVector(), objectVector);
 	walkingDirection = walkingDirection.Add(0, crossProduct.Z > 0 ? -adjustedRotationSpeed : adjustedRotationSpeed, 0);
+}
+
+void ASDTAIController::sweepNearbyObjects(bool& isPlayerNearby, bool& isPoweredUpPlayerNearby, FVector& nearbyPlayerLocation) {
+	TArray<struct FHitResult> nearbyHitResults;
+	const FCollisionShape fleeSphereShape = FCollisionShape::MakeSphere(400.f);
+	FCollisionQueryParams params = FCollisionQueryParams();
+	params.AddIgnoredActor(GetPawn());
+
+	GetWorld()->SweepMultiByObjectType(nearbyHitResults, GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation(), FQuat::Identity, FCollisionObjectQueryParams::AllObjects, fleeSphereShape, params);
+	if (debug) {
+		DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation(), 400.f, 16, FColor::Orange);
+	}
+	for (auto nearbyHit : nearbyHitResults) {
+		if (nearbyHit.Component->GetCollisionObjectType() == COLLISION_PLAYER) {
+			findPlayer(nearbyHit, isPlayerNearby, nearbyPlayerLocation, isPoweredUpPlayerNearby);
+		}
+	}
+}
+
+void ASDTAIController::sweepFowardObjects(bool& collectibleFound, FVector& collectibleLocation, bool& playerFound, bool& isPlayerPowerUp, FVector& playerLocation) {
+	TArray<struct FHitResult> HitResults;
+	const FVector Start = GetPawn()->GetActorLocation() + GetPawn()->GetActorForwardVector() * 200.f;
+	const FVector End = GetPawn()->GetActorLocation() + GetPawn()->GetActorForwardVector() * 200.f;
+	const FCollisionShape SphereShape = FCollisionShape::MakeSphere(200.f);
+	FCollisionQueryParams params = FCollisionQueryParams();
+	params.AddIgnoredActor(GetPawn());
+
+	GetWorld()->SweepMultiByObjectType(HitResults, Start, End, FQuat::Identity, FCollisionObjectQueryParams::AllObjects, SphereShape, params);
+	if (debug) {
+		DrawDebugSphere(GetWorld(), Start, 200.f, 16, FColor::Yellow);
+	}
+	for (auto hit : HitResults) {
+		if (hit.Component->GetCollisionObjectType() == COLLISION_COLLECTIBLE) {
+			findCollectible(hit, collectibleFound, collectibleLocation);
+		}
+		if (hit.Component->GetCollisionObjectType() == COLLISION_PLAYER) {
+			findPlayer(hit, playerFound, playerLocation, isPlayerPowerUp);
+		}
+	}
+}
+
+void ASDTAIController::UpdatePawnIsEscapingPlayerStatus(bool& isPoweredUpPlayerNearby, const FVector nearbyPlayerLocation) {
+	if (isPoweredUpPlayerNearby && isEscapingPoweredUpPlayer) {
+		// If angle between foward vector and pawn to player vector is > 170
+		// set isEscapingPoweredUpPlayer to false
+		FVector pawnToPlayer = nearbyPlayerLocation - GetPawn()->GetActorLocation();
+		float angle = std::abs(std::acos(FVector::DotProduct(pawnToPlayer.GetSafeNormal(), GetPawn()->GetActorForwardVector().GetSafeNormal()))) * 180 / PI;
+		if (angle > 170 && !SDTUtils::Raycast(GetWorld(), GetPawn()->GetActorLocation(), GetPawn()->GetActorLocation() + (GetPawn()->GetActorForwardVector() * 100.f))) {
+			isEscapingPoweredUpPlayer = false;
+		}
+	}
+	else {
+		isEscapingPoweredUpPlayer = false;
+	}
 }
