@@ -35,6 +35,7 @@ private:
 
     // -1 rotating left, 1 rotating right, 0 not escaping;
     int escapingCorner = 0;
+    bool isEscapingPoweredUpPlayer = false;
 
     virtual void computeNeasestCollision(float& distance, FVector_NetQuantizeNormal& hitNormal, TArray<struct FHitResult> hits);
     virtual void freeRoam(float& speed, FRotator& walkingDirection, FVector feetCenter, float deltaTime);
