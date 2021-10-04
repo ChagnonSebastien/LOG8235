@@ -38,12 +38,12 @@ private:
     bool isEscapingPoweredUpPlayer = false;
 
     virtual void computeNeasestCollision(float& distance, FVector_NetQuantizeNormal& hitNormal, TArray<struct FHitResult> hits);
-    virtual void freeRoam(float& speed, FRotator& walkingDirection, FVector feetCenter, float deltaTime);
+    virtual void freeRoam(float& speed, FRotator& walkingDirection, TArray<struct FHitResult> centerHitResults, TArray<struct FHitResult> rightHitResults, TArray<struct FHitResult> leftHitResults, float deltaTime);
     virtual void chaseObject(FRotator& walkingDirection, FVector objectLocation);
     virtual void findCollectible(FHitResult hit, bool& collectibleFound, FVector& collectibleLocation);
     virtual void findPlayer(FHitResult hit, bool& playerFound, FVector& playerLocation, bool& isPlayerPowerUp);
-    virtual void runFromObject(float& speed, FRotator& walkingDirection, FVector objectLocation);
-    virtual void sweepNearbyObjects(bool& isPlayerNearby, bool& isPoweredUpPlayerNearby, FVector& nearbyPlayerLocation);
+    //virtual void runFromObject(float& speed, FRotator& walkingDirection, FVector objectLocation);
+    //virtual void sweepNearbyObjects(bool& isPlayerNearby, bool& isPoweredUpPlayerNearby, FVector& nearbyPlayerLocation);
     virtual void sweepFowardObjects(bool& collectibleFound, FVector& collectibleLocation, bool& playerFound, bool& isPlayerPowerUp, FVector& playerLocation);
-    virtual void UpdatePawnIsEscapingPlayerStatus(bool& isPoweredUpPlayerNearby, const FVector nearbyPlayerLocation);
+    //virtual void UpdatePawnIsEscapingPlayerStatus(bool& isPoweredUpPlayerNearby, const FVector nearbyPlayerLocation);
 };
