@@ -19,37 +19,30 @@ public:
     void Collect();
     void OnCooldownDone();
     bool IsOnCooldown();
-    /*
-    * Name: m_CollectCooldownDuration
-    * Description: Time before the collectible respawn after being taken
-    */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI, Meta = (
+        ShortTooltip = "Temps de reaparition",
+        ToolTip = "Determine le temps de reapparition d'un collectible"))
         float m_CollectCooldownDuration = 10.f;
-    /*
-    * Name: isMoveable
-    * Description: true if collectible can move, else false
-    */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI, Meta = (
+        ShortTooltip = "Se deplace",
+        ToolTip = "Determine si un collectible peut se deplacer"))
         bool isMoveable = false;
 
-    /*
-    * Name: MAX_SPEED
-    * Description: Maximum speed of the moveable collectible
-    */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI, Meta = (
+        ShortTooltip = "Vitesse maximale",
+        ToolTip = "Determine la vitesse maximale a laquelle un collectible peut se deplacer"))
         float MAX_SPEED = 500.0f;
 
-    /*
-    * Name: MAX_ACCELERATION
-    * Description: Length of the acceleration vector
-    */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI, Meta = (
+        ShortTooltip = "Acceleration maximale",
+        ToolTip = "Determine l'acceleration maximale a laquelle un collectible peut se deplacer"))
         float MAX_ACCELERATION = 500.0f;
-    /*
-    * Name: MIN_DIST_WALL
-    * Description: Minimum distance between the wall and the moveable collectible
-    */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI, Meta = (
+        ShortTooltip = "Distance minimum d'un mur",
+        ToolTip = "Determine la distance minimale a laquelle un collectible se deplaçant peut s'approcher d'un mur"))
         float MIN_DIST_WALL = 200.f;
     
     virtual void Tick(float deltaTime) override;

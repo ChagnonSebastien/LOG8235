@@ -1,7 +1,7 @@
 /*
 * STDAIController.h
 * Authors:
-    - Sébastien Chagnon
+    - Sebastien Chagnon
     - Andy Lam
     - Jason Thai
     - Alexandre Ramtoula
@@ -22,35 +22,35 @@ class SOFTDESIGNTRAINING_API ASDTAIController : public AAIController
 {
     GENERATED_BODY()
 public:
-    /*
-    * Name: debug
-    * Description: Show debug logs and lines if set to True
-    */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+
+    UPROPERTY(
+        EditAnywhere, BlueprintReadWrite, Category = AI, Meta = (
+            ShortTooltip = "Afficher le debug",
+            ToolTip = "Outil activable permettant de faciliter la comprehension du comportement de l'agent en faisant des affichages lors des simulations"))
         bool debug = false;
-    /*
-    * Name: sightThreshold
-    * Description: Agent's detection sight threshhold
-    */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI, Meta = (
+        ShortTooltip = "Limite de vision",
+        ToolTip = "Determine la distance a laquel les detections d'objets sont faites a l'avant de l'agent"))
         float sightThreshold = 400.f;
-    /*
-    * Name: envyStrength
-    * Description: Agent's envy strength
-    */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI, Meta = (
+        ShortTooltip = "Force du desir",
+        ToolTip = "Influence la force du systeme de desir de l'agent intelligent. Plus la valeur est elevee, moins il resistera a l'envie de tourner d'un cote ou de l'autre en mode 'free roam'"))
         float envyStrength = 0.2f;
-    /*
-    * Name: rotatingSpeed
-    * Description: Agent's rotating speed
-    */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI, Meta = (
+        ShortTooltip = "Vitesse de rotation",
+        ToolTip = "Determine la vitesse a laquelle l'agent fait sa rotation lorsqu'il change de direction"))
         float rotatingSpeed = 3.0f;
-    /*
-    * Name: detectionSphereRadius
-    * Description: Agent's detection sphere radius
-    */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI, Meta=(
+        ShortTooltip = "Rayon de la sphere de detection",
+        ToolTip = "Determine le rayon de la sphere autour de l'agent lui permettant de detecter les differents objets de son environnement"))
         float detectionSphereRadius = 200.f;
 
     virtual void Tick(float deltaTime) override;
