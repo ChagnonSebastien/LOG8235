@@ -61,8 +61,8 @@ private:
     // -1 rotating left, 1 rotating right, 0 not escaping;
     int escapingCorner = 0;
 
-    virtual void computeNearestCollision(float& distance, FVector_NetQuantizeNormal& hitNormal, TArray<struct FHitResult> hits);
-    virtual void freeRoam(float& speed, FRotator& walkingDirection, TArray<struct FHitResult> centerHitResults, TArray<struct FHitResult> rightHitResults, TArray<struct FHitResult> leftHitResults, float deltaTime);
+    virtual TSharedPtr<FHitResult> computeNearestCollision(TArray<struct FHitResult> hits, TSet<ECollisionChannel> validChannels);
+    virtual void freeRoam(float& speed, FRotator& walkingDirection, TSharedPtr<FHitResult> centerClosestCollision, TSharedPtr<FHitResult> leftClosestCollision, TSharedPtr<FHitResult> rightClosestCollision, float deltaTime);
     virtual void chaseObject(FRotator& walkingDirection, FVector objectLocation);
     virtual void findCollectible(FHitResult hit, bool& collectibleFound, FVector& collectibleLocation);
     virtual void findPlayer(FHitResult hit, bool& playerFound, FVector& playerLocation, bool& isPlayerPowerUp);

@@ -13,6 +13,7 @@
 #include "SoftDesignTraining.h"
 #include "DrawDebugHelpers.h"
 #include "SDTUtils.h"
+#include "Containers/Set.h"
 
 void ASDTAIController::Tick(float deltaTime)
 {
@@ -33,23 +34,28 @@ void ASDTAIController::Tick(float deltaTime)
 	FVector const centerSight = feetCenter + sight;
 	FVector const leftFootSight = leftFoot + sight / 2;
 
-	if (debug) {
+	if (debug)
+	{
 		DrawDebugLine(world, rightFoot, rightFootSight, FColor::Red);
 		DrawDebugLine(world, feetCenter, centerSight, FColor::Red);
 		DrawDebugLine(world, leftFoot, leftFootSight, FColor::Red);
 	}
 
 	// Raytrace from each of the agent's point of view
-	FCollisionQueryParams params = FCollisionQueryParams();
-	params.AddIgnoredActor(GetPawn());
-	TArray<struct FHitResult> rightHitResults;
-	world->LineTraceMultiByObjectType(rightHitResults, rightFoot, rightFootSight, FCollisionObjectQueryParams::AllObjects, params);
-	TArray<struct FHitResult> centerHitResults;
-	world->LineTraceMultiByObjectType(centerHitResults, feetCenter, centerSight, FCollisionObjectQueryParams::AllObjects, params);
-	TArray<struct FHitResult> leftHitResults;
-	world->LineTraceMultiByObjectType(leftHitResults, leftFoot, leftFootSight, FCollisionObjectQueryParams::AllObjects, params);
 
-	bool const hasWallInSight = rightHitResults.Num() + centerHitResults.Num() + leftHitResults.Num() > 0;
+	TArray<struct FHitResult> rightHitResults;
+	world->LineTraceMultiByObjectType(rightHitResults, rightFoot, rightFootSight, FCollisionObjectQueryParams::DefaultObjectQueryParam);
+	TSharedPtr<FHitResult> rightClosestWallCollision = computeNearestCollision(rightHitResults, { ECollisionChannel::ECC_WorldStatic, COLLISION_DEATH_OBJECT });
+
+	TArray<struct FHitResult> centerHitResults;
+	world->LineTraceMultiByObjectType(centerHitResults, feetCenter, centerSight, FCollisionObjectQueryParams::DefaultObjectQueryParam);
+	TSharedPtr<FHitResult> centerClosestWallCollision = computeNearestCollision(centerHitResults, { ECollisionChannel::ECC_WorldStatic, COLLISION_DEATH_OBJECT });
+
+	TArray<struct FHitResult> leftHitResults;
+	world->LineTraceMultiByObjectType(leftHitResults, leftFoot, leftFootSight, FCollisionObjectQueryParams::DefaultObjectQueryParam);
+	TSharedPtr<FHitResult> leftClosestWallCollision = computeNearestCollision(leftHitResults, { ECollisionChannel::ECC_WorldStatic, COLLISION_DEATH_OBJECT });
+
+	bool const hasWallInSight = rightClosestWallCollision || leftClosestWallCollision || centerClosestWallCollision;
 
 	bool collectibleFound = false;
 	FVector collectibleLocation;
@@ -66,7 +72,8 @@ void ASDTAIController::Tick(float deltaTime)
 	// ***
 	// CORNER DETECTION
 	// ***
-	if (escapingCorner == 0) {
+	if (escapingCorner == 0)
+	{
 		// Agent is not currently escaping from a corner
 
 		if (playerFound && isPlayerPowerUp)
@@ -76,31 +83,26 @@ void ASDTAIController::Tick(float deltaTime)
 			FVector crossProduct = FVector::CrossProduct(GetPawn()->GetActorForwardVector(), objectVector);
 			escapingCorner = crossProduct.Z > 0 ? -1 : 1;
 		}
-		else if (rightHitResults.Num() > 0 && leftHitResults.Num() > 0)
+		else if (leftClosestWallCollision && rightClosestWallCollision)
 		{
-			// Left wall collision detection
-			float leftWallDistance;
-			FVector_NetQuantizeNormal leftWallHitNormal;
-			computeNearestCollision(leftWallDistance, leftWallHitNormal, leftHitResults);
 
-			// Right wall collision detection
-			float rightWallDistance;
-			FVector_NetQuantizeNormal rightWallHitNormal;
-			computeNearestCollision(rightWallDistance, rightWallHitNormal, rightHitResults);
-
-			if (!(leftWallHitNormal - rightWallHitNormal).IsNearlyZero()) {
+			if (!(leftClosestWallCollision->ImpactNormal - rightClosestWallCollision->ImpactNormal).IsNearlyZero())
+			{
+				GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Emerald, FString::Printf(TEXT("Begin Escaping!!!!")));
 				// Both sides of the agent collision detection are not hitting the same surface normal. Therefore, the agent must be in front of a corner.
-				escapingCorner = (leftWallDistance > rightWallDistance) ? -1 : 1;
+				escapingCorner = (leftClosestWallCollision->Distance > rightClosestWallCollision->Distance) ? -1 : 1;
 			}
 		}
 	}
 	else {
 		// Agent is currently escaping from a corner
 
-		if (debug) {
+		if (debug)
+		{
 			GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Cyan, FString::Printf(TEXT("IS ESCAPING: %f"), escapingCorner));
 		}
-		if (!hasWallInSight && (!playerFound || !isPlayerPowerUp)) {
+		if (!hasWallInSight && (!playerFound || !isPlayerPowerUp))
+		{
 			// Agent has successfully escaped from the corner
 			escapingCorner = 0;
 		}
@@ -127,7 +129,7 @@ void ASDTAIController::Tick(float deltaTime)
 	else
 	{
 		// Movement is not constraint by a higher proprity task
-		freeRoam(speed, walkingDirection, centerHitResults, rightHitResults, leftHitResults, deltaTime);
+		freeRoam(speed, walkingDirection, centerClosestWallCollision, leftClosestWallCollision, rightClosestWallCollision, deltaTime);
 	}
 
 	// Apply movement
@@ -150,15 +152,20 @@ void ASDTAIController::Tick(float deltaTime)
 	collectibleLocation (FVector&) : collectible's location if collectible is found, else null
 * Return: None
 */
-void ASDTAIController::findCollectible(FHitResult hit, bool& collectibleFound, FVector& collectibleLocation) {
+void ASDTAIController::findCollectible(FHitResult hit, bool& collectibleFound, FVector& collectibleLocation)
+{
 	struct FHitResult hitResult;
 	FCollisionQueryParams params = FCollisionQueryParams();
 	params.AddIgnoredActor(GetPawn());
-	if (GetWorld()->LineTraceSingleByObjectType(hitResult, GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FCollisionObjectQueryParams::AllObjects, params)) {
-		if (hitResult.GetComponent()->GetCollisionObjectType() == COLLISION_COLLECTIBLE) {
-			if (hit.GetActor()->IsA(ASDTCollectible::StaticClass())) {
+	if (GetWorld()->LineTraceSingleByObjectType(hitResult, GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FCollisionObjectQueryParams::AllObjects, params))
+	{
+		if (hitResult.GetComponent()->GetCollisionObjectType() == COLLISION_COLLECTIBLE)
+		{
+			if (hit.GetActor()->IsA(ASDTCollectible::StaticClass()))
+			{
 				ASDTCollectible* collectible = Cast<ASDTCollectible>(hit.GetActor());
-				if (!collectible->IsOnCooldown()) {
+				if (!collectible->IsOnCooldown())
+				{
 					collectibleFound = true;
 					collectibleLocation = hit.GetActor()->GetActorLocation();
 				}
@@ -180,13 +187,17 @@ void ASDTAIController::findCollectible(FHitResult hit, bool& collectibleFound, F
 	playerLocation (FVector&) : player's location if player is found, else null
 * Return: None
 */
-void ASDTAIController::findPlayer(FHitResult hit, bool& playerFound, FVector& playerLocation, bool& isPlayerPowerUp) {
+void ASDTAIController::findPlayer(FHitResult hit, bool& playerFound, FVector& playerLocation, bool& isPlayerPowerUp)
+{
 	struct FHitResult hitResult;
 	FCollisionQueryParams params = FCollisionQueryParams();
 	params.AddIgnoredActor(GetPawn());
-	if (GetWorld()->LineTraceSingleByObjectType(hitResult, GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FCollisionObjectQueryParams::AllObjects, params)) {
-		if (hitResult.GetComponent()->GetCollisionObjectType() == COLLISION_PLAYER) {
-			if (ASoftDesignTrainingMainCharacter* player = Cast<ASoftDesignTrainingMainCharacter>(hit.GetActor())) {
+	if (GetWorld()->LineTraceSingleByObjectType(hitResult, GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FCollisionObjectQueryParams::AllObjects, params))
+	{
+		if (hitResult.GetComponent()->GetCollisionObjectType() == COLLISION_PLAYER)
+		{
+			if (ASoftDesignTrainingMainCharacter* player = Cast<ASoftDesignTrainingMainCharacter>(hit.GetActor()))
+			{
 				playerFound = true;
 				playerLocation = hit.GetActor()->GetActorLocation();
 				isPlayerPowerUp = player->IsPoweredUp();
@@ -203,39 +214,34 @@ void ASDTAIController::findPlayer(FHitResult hit, bool& playerFound, FVector& pl
 * Args:
 	speed (float&) : The agent's speed
 	walkingDirection (FRotator&) : The agent's walking direction
-	centerHitResults (TArray<struct FHitResult>) : List of collision hits by the center line trace
-	rightHitResults (TArray<struct FHitResult>) : List of collision hits by the right most line trace
-	leftHitResults (TArray<struct FHitResult>) : List of collision hits by the left most line trace
+	centerClosestCollision (TSharedPtr<FHitResult>) : A pointer to the closest wall hit by the center raytracing
+	leftClosestCollision (TSharedPtr<FHitResult>) : A pointer to the closest wall hit by the left raytracing
+	rightClosestCollision (TSharedPtr<FHitResult>) : A pointer to the closest wall hit by the right raytracing
 	deltaTime (float) : Time between two ticks.
 * Return: None
 */
-void ASDTAIController::freeRoam(float& speed, FRotator& walkingDirection, TArray<struct FHitResult> centerHitResults, TArray<struct FHitResult> rightHitResults, TArray<struct FHitResult> leftHitResults, float deltaTime) {
+void ASDTAIController::freeRoam(float& speed, FRotator& walkingDirection, TSharedPtr<FHitResult> centerClosestCollision, TSharedPtr<FHitResult> leftClosestCollision, TSharedPtr<FHitResult> rightClosestCollision, float deltaTime)
+{
 
-	// ***
-	// SPEED AND TURNING COMPUTATION
-	// ***
 	float adjustedRotationSpeed = rotatingSpeed;
-	if (rightHitResults.Num() + centerHitResults.Num() + leftHitResults.Num() > 0) {
+	if (rightClosestCollision || leftClosestCollision || centerClosestCollision)
+	{
 		// Agent is seeing a wall, but is not in an escape sequence
 		// -> Slowdown to prevent hitting the wall
 		// -> Rotate to prevent hitting the wall
 
-		if (centerHitResults.Num() > 0) {
+		if (centerClosestCollision)
+		{
 			// Agent is seeing a wall right in front of him
 
-			// Left wall collision detection
-			float wallDistance;
-			FVector_NetQuantizeNormal wallHitNormal;
-			computeNearestCollision(wallDistance, wallHitNormal, centerHitResults);
-
 			// Slowdown based on the wall distance from the front of the agent
-			speed = wallDistance / sightThreshold;
+			speed = centerClosestCollision->Distance / sightThreshold;
 
 			// Rotate slower the faster the agent is moving
 			adjustedRotationSpeed = adjustedRotationSpeed / ((speed + 1) / 2);
 
 			// Rotate
-			FVector cross = FVector::CrossProduct(wallHitNormal, walkingDirection.Vector());
+			FVector cross = FVector::CrossProduct(centerClosestCollision->ImpactNormal, walkingDirection.Vector());
 			walkingDirection = walkingDirection.Add(0, cross.Z > 0 ? -adjustedRotationSpeed : adjustedRotationSpeed, 0);
 
 		}
@@ -243,7 +249,7 @@ void ASDTAIController::freeRoam(float& speed, FRotator& walkingDirection, TArray
 			// Agent is seeing a wall from the corner of his eye
 
 			// Rotate
-			walkingDirection = walkingDirection.Add(0, rightHitResults.Num() > 0 ? -adjustedRotationSpeed : adjustedRotationSpeed, 0);
+			walkingDirection = walkingDirection.Add(0, rightClosestCollision ? -adjustedRotationSpeed : adjustedRotationSpeed, 0);
 		}
 	}
 	else {
@@ -258,21 +264,26 @@ void ASDTAIController::freeRoam(float& speed, FRotator& walkingDirection, TArray
 /*
 * Name: computeNearestCollision
 * Description:
-	Function that returns the nearest collision in the given list of collision hits.
+	Function that returns the nearest collision in the given list of collision hits within a channel subset.
 * Args:
 	distance (float&) : Distance of the closest hit
 	hitNormal (FVector_NetQuantizeNormal&) : Normal vector of the closest hit
 	hits (TArray<struct FHitResult>) : List of collision hits
-* Return: None
+* Return: TSharedPtr<FHitResult>: The closest hit wall, or nullptr
 */
-void ASDTAIController::computeNearestCollision(float& distance, FVector_NetQuantizeNormal& hitNormal, TArray<struct FHitResult> hits) {
-	distance = sightThreshold;
-	for (FHitResult hit : hits) {
-		if (hit.Distance < distance) {
-			distance = hit.Distance;
-			hitNormal = hit.ImpactNormal;
+TSharedPtr<FHitResult> ASDTAIController::computeNearestCollision(TArray<struct FHitResult> hits, TSet<ECollisionChannel> validChannels)
+{
+	TSharedPtr<FHitResult> closestHit = nullptr;
+	for (FHitResult hit : hits)
+	{
+		bool isValidChannel = validChannels.Contains(hit.Component->GetCollisionObjectType());
+		bool closest = closestHit == nullptr || hit.Distance < closestHit->Distance;
+		if (isValidChannel && closest)
+		{
+			closestHit = MakeShared<FHitResult>(hit);
 		}
 	}
+	return closestHit;
 }
 
 /*
@@ -285,7 +296,8 @@ void ASDTAIController::computeNearestCollision(float& distance, FVector_NetQuant
 	objectLocation (FVector) : The location of the object to chase after
 * Return: None
 */
-void ASDTAIController::chaseObject(FRotator& walkingDirection, FVector objectLocation) {
+void ASDTAIController::chaseObject(FRotator& walkingDirection, FVector objectLocation)
+{
 	float adjustedRotationSpeed = rotatingSpeed;
 	FVector const objectVector = objectLocation - GetPawn()->GetActorLocation();
 	FVector crossProduct = FVector::CrossProduct(GetPawn()->GetActorForwardVector(), objectVector);
@@ -304,7 +316,8 @@ void ASDTAIController::chaseObject(FRotator& walkingDirection, FVector objectLoc
 	playerLocation (FVector&) : player's location if player is found, else null
 * Return: None
 */
-void ASDTAIController::sweepForwardObjects(bool& collectibleFound, FVector& collectibleLocation, bool& playerFound, bool& isPlayerPowerUp, FVector& playerLocation) {
+void ASDTAIController::sweepForwardObjects(bool& collectibleFound, FVector& collectibleLocation, bool& playerFound, bool& isPlayerPowerUp, FVector& playerLocation)
+{
 	TArray<struct FHitResult> HitResults;
 	const FVector Start = GetPawn()->GetActorLocation() + GetPawn()->GetActorForwardVector() * detectionSphereRadius;
 	const FVector End = GetPawn()->GetActorLocation() + GetPawn()->GetActorForwardVector() * detectionSphereRadius;
@@ -313,14 +326,18 @@ void ASDTAIController::sweepForwardObjects(bool& collectibleFound, FVector& coll
 	params.AddIgnoredActor(GetPawn());
 
 	GetWorld()->SweepMultiByObjectType(HitResults, Start, End, FQuat::Identity, FCollisionObjectQueryParams::AllObjects, SphereShape, params);
-	if (debug) {
+	if (debug)
+	{
 		DrawDebugSphere(GetWorld(), Start, detectionSphereRadius, 16, FColor::Yellow);
 	}
-	for (auto hit : HitResults) {
-		if (hit.Component->GetCollisionObjectType() == COLLISION_COLLECTIBLE) {
+	for (auto hit : HitResults)
+	{
+		if (hit.Component->GetCollisionObjectType() == COLLISION_COLLECTIBLE)
+		{
 			findCollectible(hit, collectibleFound, collectibleLocation);
 		}
-		if (hit.Component->GetCollisionObjectType() == COLLISION_PLAYER) {
+		if (hit.Component->GetCollisionObjectType() == COLLISION_PLAYER)
+		{
 			findPlayer(hit, playerFound, playerLocation, isPlayerPowerUp);
 		}
 	}
