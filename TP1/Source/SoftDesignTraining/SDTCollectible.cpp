@@ -1,5 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+/*
+* SDTCollectible.cpp
+* Authors:
+    - Sébastien Chagnon
+    - Andy Lam
+    - Jason Thai
+    - Alexandre Ramtoula
+    - Philippe Trempe
+*/
 #include "SDTCollectible.h"
 #include "SoftDesignTraining.h"
 #include "SDTUtils.h"
@@ -35,7 +42,13 @@ bool ASDTCollectible::IsOnCooldown()
 {
     return m_CollectCooldownTimer.IsValid();
 }
-
+/*
+* Name: SetToInitialState
+* Description:
+    Function which set the collectible to the initial state
+* Args: None
+* Return: None
+*/
 void ASDTCollectible::SetToInitialState()
 {
     SetActorLocation(m_initialPosition);
@@ -55,14 +68,18 @@ void ASDTCollectible::Tick(float deltaTime)
         // deltaT pour atteindre une vitesse nulle
         float deltaT = abs(m_speed.Size() / m_acceleration.Size());
         // xf - xi = v*t + 1/2 * a * t^2 sachant que xi = 0
-        float dist = m_speed.Size() * deltaT - 1 / 2 * m_acceleration.Size() * deltaT * deltaT;
+        float dist = m_speed.Size() * deltaT - 0.5f * m_acceleration.Size() * deltaT * deltaT;
+        dist += MIN_DIST_WALL;
+        // Check if there is a wall in his direction 
+        if (SDTUtils::Raycast(world, FVector(objectPos), FVector(objectPos) + dist * m_acceleration.GetSafeNormal())) {
 
-        if (SDTUtils::Raycast(world, FVector(FVector(objectPos)), FVector(FVector(objectPos)) + dist * m_acceleration.GetSafeNormal())) {
+            //Inverse the orientation of the acceleration
             m_acceleration *= -1.f;
         }
 
         FVector const displacement = m_speed * deltaTime;
         SetActorLocation(objectPos + displacement, true);
+        
         FVector temp_speed = m_speed + m_acceleration * deltaTime;
         m_speed = (MAX_SPEED > abs(temp_speed.Y)) ? temp_speed : (temp_speed.GetSafeNormal() * MAX_SPEED);
     }
