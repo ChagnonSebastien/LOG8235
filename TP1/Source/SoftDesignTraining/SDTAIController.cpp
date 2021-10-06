@@ -64,10 +64,11 @@ void ASDTAIController::Tick(float deltaTime)
 	float speed = 1.0f;
 	FRotator walkingDirection = GetPawn()->GetActorRotation();
 
+	
 	// ***
 	// CORNER DETECTION
 	// ***
-	if (escapingCorner == 0) {
+	if (escaping == Escaping::None) {
 		// Agent is not currently escaping from a corner
 
 		if (playerFound && isPlayerPowerUp)
@@ -75,7 +76,7 @@ void ASDTAIController::Tick(float deltaTime)
 			// Agent is escaping from player
 			FVector const objectVector = playerLocation - GetPawn()->GetActorLocation();
 			FVector crossProduct = FVector::CrossProduct(GetPawn()->GetActorForwardVector(), objectVector);
-			escapingCorner = crossProduct.Z > 0 ? -1 : 1;
+			escaping = crossProduct.Z > 0 ? Escaping::Left : Escaping::Right;
 		}
 		else if (rightHitResults.Num() > 0 && leftHitResults.Num() > 0)
 		{
@@ -91,7 +92,7 @@ void ASDTAIController::Tick(float deltaTime)
 
 			if (!(leftWallHitNormal - rightWallHitNormal).IsNearlyZero()) {
 				// Both sides of the agent collision detection are not hitting the same surface normal. Therefore, the agent must be in front of a corner.
-				escapingCorner = (leftWallDistance > rightWallDistance) ? -1 : 1;
+				escaping = (leftWallDistance > rightWallDistance) ? Escaping::Left : Escaping::Right;
 			}
 		}
 	}
@@ -99,21 +100,21 @@ void ASDTAIController::Tick(float deltaTime)
 		// Agent is currently escaping from a corner
 
 		if (debug) {
-			GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Cyan, FString::Printf(TEXT("IS ESCAPING: %f"), escapingCorner));
+			GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Cyan, FString::Printf(TEXT("IS ESCAPING: %d"), escaping));
 		}
 		if (!hasWallInSight && (!playerFound || !isPlayerPowerUp)) {
 			// Agent has successfully escaped from the corner
-			escapingCorner = 0;
+			escaping = Escaping::None;
 		}
 	}
 
-	if (escapingCorner != 0)
+	if (escaping != Escaping::None)
 	{
 		// Agent is currently escaping a corner
 		//  -> Stop moving
 		//  -> Rotate in the fastest estimated escape direction
 		speed = 0.0f;
-		walkingDirection = walkingDirection.Add(0, rotatingSpeed * escapingCorner, 0);
+		walkingDirection = walkingDirection.Add(0, rotatingSpeed * escaping, 0);
 	}
 	else if (playerFound && !isPlayerPowerUp)
 	{

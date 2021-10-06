@@ -27,7 +27,7 @@ public:
         EditAnywhere, BlueprintReadWrite, Category = AI, Meta = (
             ShortTooltip = "Afficher le debug",
             ToolTip = "Outil activable permettant de faciliter la comprehension du comportement de l'agent en faisant des affichages lors des simulations"))
-        bool debug = false;
+        bool debug = true;
 
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI, Meta = (
@@ -56,10 +56,9 @@ public:
     virtual void Tick(float deltaTime) override;
 
 private:
+    enum Escaping { Left = -1, None = 0, Right = 1 };
     FRotator envy = FRotator(0, 1, 0);
-
-    // -1 rotating left, 1 rotating right, 0 not escaping;
-    int escapingCorner = 0;
+    Escaping escaping = None;
 
     virtual void computeNearestCollision(float& distance, FVector_NetQuantizeNormal& hitNormal, TArray<struct FHitResult> hits);
     virtual void freeRoam(float& speed, FRotator& walkingDirection, TArray<struct FHitResult> centerHitResults, TArray<struct FHitResult> rightHitResults, TArray<struct FHitResult> leftHitResults, float deltaTime);
