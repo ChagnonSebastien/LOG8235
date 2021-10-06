@@ -42,6 +42,7 @@ void ASDTAIController::Tick(float deltaTime)
 	// Raytrace from each of the agent's point of view
 	FCollisionQueryParams params = FCollisionQueryParams();
 	params.AddIgnoredActor(GetPawn());
+	
 	TArray<struct FHitResult> rightHitResults;
 	world->LineTraceMultiByObjectType(rightHitResults, rightFoot, rightFootSight, FCollisionObjectQueryParams::AllObjects, params);
 	TArray<struct FHitResult> centerHitResults;
@@ -128,6 +129,11 @@ void ASDTAIController::Tick(float deltaTime)
 	{
 		// Movement is not constraint by a higher proprity task
 		freeRoam(speed, walkingDirection, centerHitResults, rightHitResults, leftHitResults, deltaTime);
+	}
+
+	// Stop the agent if death trap is found right in front of his feet
+	if (sweepDeathTrap(feetCenter, boundingBox->GetScaledCapsuleRadius())) {
+		speed = 0.f;
 	}
 
 	// Apply movement
@@ -268,12 +274,12 @@ void ASDTAIController::freeRoam(float& speed, FRotator& walkingDirection, TArray
 void ASDTAIController::computeNearestCollision(float& distance, FVector_NetQuantizeNormal& hitNormal, TArray<struct FHitResult> hits) {
 	distance = sightThreshold;
 	for (FHitResult hit : hits) {
-		if (hit.Distance < distance) {
+		if (hit.Distance < distance && hit.Component->GetCollisionObjectType() != ECollisionChannel::ECC_Pawn) {
 			distance = hit.Distance;
 			hitNormal = hit.ImpactNormal;
 		}
 	}
-}
+}//
 
 /*
 * Name: chaseObject
@@ -324,4 +330,32 @@ void ASDTAIController::sweepForwardObjects(bool& collectibleFound, FVector& coll
 			findPlayer(hit, playerFound, playerLocation, isPlayerPowerUp);
 		}
 	}
+}
+
+/*
+* Name: sweepDeathTrap
+* Description:
+	Function that sweeps for all death traps contained in a agent's detection sphere.
+* Args:
+	pawnRadius (float&) : Radius of the pawn
+	feetCenter (FVector&) : position of the pawn's feet
+* Return: True if a death trap is found, else False
+*/
+bool ASDTAIController::sweepDeathTrap( FVector feetCenter, float pawnRadius  ) {
+	TArray<struct FHitResult> HitResults;
+	const FVector Start = feetCenter + GetPawn()->GetActorForwardVector() * pawnRadius * 0.5f;
+	const FVector End = feetCenter + GetPawn()->GetActorForwardVector() * pawnRadius * 0.5f;
+	const FCollisionShape SphereShape = FCollisionShape::MakeSphere(pawnRadius);
+	FCollisionQueryParams params = FCollisionQueryParams();
+	params.AddIgnoredActor(GetPawn());
+	GetWorld()->SweepMultiByObjectType(HitResults, Start, End, FQuat::Identity, FCollisionObjectQueryParams::AllObjects, SphereShape, params);
+	if (debug) {
+		DrawDebugSphere(GetWorld(), Start, pawnRadius, 16, FColor::Yellow);
+	}
+	for (auto hit : HitResults) {
+		if (hit.Component->GetCollisionObjectType() == COLLISION_DEATH_OBJECT) {
+			return true;
+		}
+	}
+	return false;
 }

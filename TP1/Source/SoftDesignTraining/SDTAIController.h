@@ -67,4 +67,6 @@ private:
     virtual void findCollectible(FHitResult hit, bool& collectibleFound, FVector& collectibleLocation);
     virtual void findPlayer(FHitResult hit, bool& playerFound, FVector& playerLocation, bool& isPlayerPowerUp);
     virtual void sweepForwardObjects(bool& collectibleFound, FVector& collectibleLocation, bool& playerFound, bool& isPlayerPowerUp, FVector& playerLocation);
+    virtual bool sweepDeathTrap(FVector feetCenter, float pawnRadius);
+
 };
