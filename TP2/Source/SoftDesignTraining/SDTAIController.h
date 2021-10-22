@@ -61,5 +61,7 @@ private:
     virtual void GoToBestTarget(float deltaTime) override;
     virtual void ChooseBehavior(float deltaTime) override;
     virtual void ShowNavigationPath() override;
+    virtual FVector FindNearestPickupLocation();
+    virtual UNavigationPath* ComputePathToTarget(FVector targetLocation);
     virtual void UpdateTarget(FVector targetLocation);
 };

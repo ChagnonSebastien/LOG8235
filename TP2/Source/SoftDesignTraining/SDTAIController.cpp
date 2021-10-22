@@ -8,9 +8,11 @@
 #include "SDTPathFollowingComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
 //#include "UnrealMathUtility.h"
 #include "SDTUtils.h"
 #include "EngineUtils.h"
+#include "SDTCollectible.h"
 
 ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer.SetDefaultSubobjectClass<USDTPathFollowingComponent>(TEXT("PathFollowingComponent")))
@@ -34,15 +36,51 @@ void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollow
     m_ReachedTarget = true;
 }
 
+FVector ASDTAIController::FindNearestPickupLocation()
+{
+    float shortestPathLength = 999999999999.9f;
+    FVector shortestPathTargetLocation = FVector();
+
+    // For each pickup on the map...
+    TArray<AActor*> pickups;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASDTCollectible::StaticClass(), pickups);
+    for (auto* pickupActor : pickups) {
+
+        // Only consider pickups that are not on cooldown
+        auto* pickup = Cast<ASDTCollectible>(pickupActor);
+        if (pickup->IsOnCooldown()) {
+            continue;
+        }
+
+        // Get the pickup's location and compute the AI agent's path to its location
+        FVector pickupLocation = pickup->GetActorLocation();
+        UNavigationPath* pathToPickup = ComputePathToTarget(pickupLocation);
+        
+        // If the path's length is the shortest we have seen yet, we save it
+        float pathToPickupLength = pathToPickup->GetPathLength();
+        if (pathToPickupLength < shortestPathLength) {
+            shortestPathLength = pathToPickupLength;
+            shortestPathTargetLocation = pickupLocation;
+        }
+    }
+
+    // We return the location of the nearest pickup based on shortest path length
+    return shortestPathTargetLocation;
+}
+
+UNavigationPath* ASDTAIController::ComputePathToTarget(FVector targetLocation) {
+    UNavigationSystemV1* navigationSystem = UNavigationSystemV1::GetCurrent(GetWorld());
+    FVector myLocation = GetPawn()->GetActorLocation();
+    return navigationSystem->FindPathToLocationSynchronously(GetWorld(), myLocation, targetLocation);
+}
+
 void ASDTAIController::UpdateTarget(FVector targetLocation)
 {
     // Update target location
     m_targetLocation = targetLocation;
 
     // Update path to target
-    UNavigationSystemV1* navigationSystem = UNavigationSystemV1::GetCurrent(GetWorld());
-    FVector myLocation = GetPawn()->GetActorLocation();
-    m_pathToTarget = navigationSystem->FindPathToLocationSynchronously(GetWorld(), myLocation, targetLocation);
+    m_pathToTarget = ComputePathToTarget(targetLocation);
 }
 
 void ASDTAIController::ShowNavigationPath()
@@ -100,7 +138,8 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 
     //Set behavior based on hit
 
-    UpdateTarget(FVector(-700.0f, -380.0f, 250.0f));
+    FVector nearestPickupLocation = FindNearestPickupLocation();
+    UpdateTarget(nearestPickupLocation);
 
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
     ShowNavigationPath();
