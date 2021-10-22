@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "NavigationSystem.h"
 #include "SDTBaseAIController.h"
 #include "SDTAIController.generated.h"
 
@@ -53,8 +54,12 @@ protected:
     void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit);
     void UpdatePlayerInteraction(float deltaTime);
 
+    FVector m_targetLocation = FVector();
+    UNavigationPath* m_pathToTarget = nullptr;
+
 private:
     virtual void GoToBestTarget(float deltaTime) override;
     virtual void ChooseBehavior(float deltaTime) override;
     virtual void ShowNavigationPath() override;
+    virtual void UpdateTarget(FVector targetLocation);
 };

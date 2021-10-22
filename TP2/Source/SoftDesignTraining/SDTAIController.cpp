@@ -1,5 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "NavigationSystem.h"
 #include "SDTAIController.h"
 #include "SoftDesignTraining.h"
 #include "SDTCollectible.h"
@@ -33,9 +34,36 @@ void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollow
     m_ReachedTarget = true;
 }
 
+void ASDTAIController::UpdateTarget(FVector targetLocation)
+{
+    // Update target location
+    m_targetLocation = targetLocation;
+
+    // Update path to target
+    UNavigationSystemV1* navigationSystem = UNavigationSystemV1::GetCurrent(GetWorld());
+    FVector myLocation = GetPawn()->GetActorLocation();
+    m_pathToTarget = navigationSystem->FindPathToLocationSynchronously(GetWorld(), myLocation, targetLocation);
+}
+
 void ASDTAIController::ShowNavigationPath()
 {
-    //Show current navigation path DrawDebugLine and DrawDebugSphere
+    // Shows current navigation path using DrawDebugLine and DrawDebugSphere
+
+    if (m_pathToTarget != NULL)
+    {
+        // For each point in the path from the AI agent to the target...
+        for (int i = 0; i < m_pathToTarget->PathPoints.Num(); ++i)
+        {
+            // Draw a small sphere at the point
+            DrawDebugSphere(GetWorld(), m_pathToTarget->PathPoints[i], 10.0f, 12, FColor(255, 0, 0));
+            
+            // If this point is not the last point in the path...
+            if (i < m_pathToTarget->PathPoints.Num() - 1) {
+                // Draw a line that connects this point to the next point in the path
+                DrawDebugLine(GetWorld(), m_pathToTarget->PathPoints[i], m_pathToTarget->PathPoints[i + 1], FColor(255, 0, 0));
+            }
+        }
+    }
 }
 
 void ASDTAIController::ChooseBehavior(float deltaTime)
@@ -72,7 +100,10 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 
     //Set behavior based on hit
 
+    UpdateTarget(FVector(-700.0f, -380.0f, 250.0f));
+
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
+    ShowNavigationPath();
 }
 
 void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit)
