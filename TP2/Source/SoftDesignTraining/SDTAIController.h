@@ -5,7 +5,11 @@
 #include "CoreMinimal.h"
 #include "NavigationSystem.h"
 #include "SDTBaseAIController.h"
+#include "SDTPathFollowingComponent.h"
 #include "SDTAIController.generated.h"
+
+// Forward declaration to avoir circular dependencies
+class USDTPathFollowingComponent;
 
 /**
  * 
@@ -17,6 +21,9 @@ class SOFTDESIGNTRAINING_API ASDTAIController : public ASDTBaseAIController
 
 public:
     ASDTAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+    float m_MovementSpeed = 300.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float m_DetectionCapsuleHalfLength = 500.f;

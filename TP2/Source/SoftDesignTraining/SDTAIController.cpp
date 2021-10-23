@@ -81,6 +81,9 @@ void ASDTAIController::UpdateTarget(FVector targetLocation)
 
     // Update path to target
     m_pathToTarget = ComputePathToTarget(targetLocation);
+
+    // Update path follower with new path
+    GetPathFollowingComponent()->RequestMove(FAIMoveRequest(), m_pathToTarget->GetPath());
 }
 
 void ASDTAIController::ShowNavigationPath()
