@@ -49,15 +49,28 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
     Super::SetMoveSegment(segmentStartIndex);
 
     const TArray<FNavPathPoint>& points = Path->GetPathPoints();
-
     const FNavPathPoint& segmentStart = points[MoveSegmentStartIndex];
+    const FNavPathPoint& segmentEnd = points[DetermineCurrentTargetPathPoint(MoveSegmentStartIndex)];
+
+    ASDTAIController* controller = Cast<ASDTAIController>(GetOwner());
 
     if (SDTUtils::HasJumpFlag(segmentStart) && FNavMeshNodeFlags(segmentStart.Flags).IsNavLink())
     {
         // Handle starting jump
+        controller->AtJumpSegment = true;
     }
     else
     {
         // Handle normal segments
+        controller->AtJumpSegment = false;
     }
+
+    FColor color;
+    if (controller->AtJumpSegment) {
+        color = FColor(0, 255, 0);
+    }
+    else {
+        color = FColor(0, 0, 255);
+    }
+    DrawDebugSphere(GetWorld(), controller->GetPawn()->GetActorLocation() + FVector::UpVector * 120.0f, 10.0f, 32, color);
 }

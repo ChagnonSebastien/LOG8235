@@ -55,6 +55,7 @@ FVector ASDTAIController::FindNearestPickupLocation()
         // Get the pickup's location and compute the AI agent's path to its location
         FVector pickupLocation = pickup->GetActorLocation();
         UNavigationPath* pathToPickup = ComputePathToTarget(pickupLocation);
+        DisplayNavigationPath(pathToPickup, FColor(128, 128, 128));
         
         // If the path's length is the shortest we have seen yet, we save it
         float pathToPickupLength = pathToPickup->GetPathLength();
@@ -88,20 +89,25 @@ void ASDTAIController::UpdateTarget(FVector targetLocation)
 
 void ASDTAIController::ShowNavigationPath()
 {
+    DisplayNavigationPath(m_pathToTarget, FColor(255, 0, 0));
+}
+
+void ASDTAIController::DisplayNavigationPath(UNavigationPath* path, FColor color)
+{
     // Shows current navigation path using DrawDebugLine and DrawDebugSphere
 
-    if (m_pathToTarget != NULL)
+    if (path != NULL)
     {
         // For each point in the path from the AI agent to the target...
-        for (int i = 0; i < m_pathToTarget->PathPoints.Num(); ++i)
+        for (int i = 0; i < path->PathPoints.Num(); ++i)
         {
             // Draw a small sphere at the point
-            DrawDebugSphere(GetWorld(), m_pathToTarget->PathPoints[i], 10.0f, 12, FColor(255, 0, 0));
+            DrawDebugSphere(GetWorld(), path->PathPoints[i], 10.0f, 12, color);
             
             // If this point is not the last point in the path...
-            if (i < m_pathToTarget->PathPoints.Num() - 1) {
+            if (i < path->PathPoints.Num() - 1) {
                 // Draw a line that connects this point to the next point in the path
-                DrawDebugLine(GetWorld(), m_pathToTarget->PathPoints[i], m_pathToTarget->PathPoints[i + 1], FColor(255, 0, 0));
+                DrawDebugLine(GetWorld(), path->PathPoints[i], path->PathPoints[i + 1], color);
             }
         }
     }
