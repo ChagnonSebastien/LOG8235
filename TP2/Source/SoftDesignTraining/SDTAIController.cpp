@@ -11,6 +11,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 //#include "UnrealMathUtility.h"
+#include <cmath>  // For fleeing decision
+
 #include "SDTUtils.h"
 #include "EngineUtils.h"
 #include "SDTCollectible.h"
@@ -89,7 +91,13 @@ FVector ASDTAIController::FindNearestHidingLocation()
 
         // If the path's length is the shortest we have seen yet, we save it
         float pathToHidingLength = pathToHiding->GetPathLength();
-        if (pathToHidingLength < shortestPathLength) {
+        float playerDistanceToSpot = sqrt(abs(playerLocation.X - hidingPlace->GetActorLocation().X) + abs(playerLocation.Y - hidingPlace->GetActorLocation().Y));
+        FVector agentLocation = GetPawn()->GetActorLocation();
+        float agentDistanceToSpot = sqrt(abs(agentLocation.X - hidingPlace->GetActorLocation().X) + abs(agentLocation.Y - hidingPlace->GetActorLocation().Y));
+
+        bool playerTooClose = playerDistanceToSpot < agentDistanceToSpot;
+
+        if ((pathToHidingLength < shortestPathLength) && !playerTooClose) {
             shortestPathLength = pathToHidingLength;
             shortestPathTargetLocation = hidingLocation;
         }
@@ -151,8 +159,7 @@ void ASDTAIController::ChooseBehavior(float deltaTime)
 void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 {
 
-    bool playerFound = false; // TO MOOVE ELSEWHERE
-    bool isPlayerPowerUp = false;  // TO MOOVE ELSEWHERE
+    bool playerFound = false; // TO MOOVE ELSEWHERE ?
     //finish jump before updating AI state
     if (AtJumpSegment)
         return;
@@ -176,18 +183,22 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     GetWorld()->SweepMultiByObjectType(allDetectionHits, detectionStartLocation, detectionEndLocation, FQuat::Identity, detectionTraceObjectTypes, FCollisionShape::MakeSphere(m_DetectionCapsuleRadius));
 
     FHitResult detectionHit;
-    GetHightestPriorityDetectionHit(allDetectionHits, detectionHit, playerFound, isPlayerPowerUp);
+    GetHightestPriorityDetectionHit(allDetectionHits, detectionHit, playerFound);
 
     //Set behavior based on hit
 
     FVector nearestPickupLocation = FindNearestPickupLocation();
     
 
-    if (playerFound && isPlayerPowerUp)
+    if ((playerFound && isPlayerPowerUp )|| (fleeing))
     {
         // Agent is escaping from player
         nearestPickupLocation = FindNearestHidingLocation();
-    }
+        fleeing = true;
+
+    } 
+    if (!isPlayerPowerUp) { fleeing = false; }
+    else if (!fleeing){ nearestPickupLocation = FindNearestPickupLocation(); }
 
     UpdateTarget(nearestPickupLocation);
 
@@ -208,7 +219,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     playerLocation (FVector&) : player's location if player is found, else null
 * Return: None
 */
-void ASDTAIController::findPlayer(FHitResult hit, bool& playerFound, bool& isPlayerPowerUp) {
+void ASDTAIController::findPlayer(FHitResult hit, bool& playerFound) {
     struct FHitResult hitResult;
     FCollisionQueryParams params = FCollisionQueryParams();
     params.AddIgnoredActor(GetPawn());
@@ -216,14 +227,14 @@ void ASDTAIController::findPlayer(FHitResult hit, bool& playerFound, bool& isPla
         if (hitResult.GetComponent()->GetCollisionObjectType() == COLLISION_PLAYER) {
             if (ASoftDesignTrainingMainCharacter* player = Cast<ASoftDesignTrainingMainCharacter>(hit.GetActor())) {
                 playerFound = true;
-                //playerLocation = hit.GetActor()->GetActorLocation();  TO USE?
+                playerLocation = hit.GetActor()->GetActorLocation();  
                 isPlayerPowerUp = player->IsPoweredUp();
             }
         }
     }
 }
 
-void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit, bool& playerFound, bool& isPlayerPowerUp)
+void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit, bool& playerFound)
 {
     for (const FHitResult& hit : hits)
     {
@@ -233,7 +244,7 @@ void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>&
             {
                 //we can't get more important than the player
                 outDetectionHit = hit;
-                findPlayer(hit, playerFound, isPlayerPowerUp);
+                findPlayer(hit, playerFound);
                 return;
             }
             else if (component->GetCollisionObjectType() == COLLISION_COLLECTIBLE)
