@@ -72,7 +72,7 @@ FVector ASDTAIController::FindNearestPickupLocation()
     return shortestPathTargetLocation;
 }
 
-FVector ASDTAIController::FindNearestHidingLocation()
+FVector ASDTAIController::FindBestHidingLocation()
 {
     float shortestPathLength = 999999999999.9f;
     FVector shortestPathTargetLocation = FVector();
@@ -82,18 +82,17 @@ FVector ASDTAIController::FindNearestHidingLocation()
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASDTFleeLocation::StaticClass(), hidingPlaces);
     for (auto* hidingActor : hidingPlaces) {
 
-        // Only consider pickups that are not on cooldown
         auto* hidingPlace = Cast<ASDTFleeLocation>(hidingActor);
 
         // Get the hiding place location and compute the AI agent's path to its location
         FVector hidingLocation = hidingPlace->GetActorLocation();
         UNavigationPath* pathToHiding = ComputePathToTarget(hidingLocation);
 
-        // If the path's length is the shortest we have seen yet, we save it
+        // If the path's length is the shortest we have seen yet and the agent has a smaller euclidian distance to the spot than the player, we save it
         float pathToHidingLength = pathToHiding->GetPathLength();
-        float playerDistanceToSpot = sqrt(abs(playerLocation.X - hidingPlace->GetActorLocation().X) + abs(playerLocation.Y - hidingPlace->GetActorLocation().Y));
+        float playerDistanceToSpot = FVector::DistXY(playerLocation,hidingPlace->GetActorLocation()); 
         FVector agentLocation = GetPawn()->GetActorLocation();
-        float agentDistanceToSpot = sqrt(abs(agentLocation.X - hidingPlace->GetActorLocation().X) + abs(agentLocation.Y - hidingPlace->GetActorLocation().Y));
+        float agentDistanceToSpot = FVector::DistXY(agentLocation, hidingPlace->GetActorLocation()); 
 
         bool playerTooClose = playerDistanceToSpot < agentDistanceToSpot;
 
@@ -193,7 +192,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     else if ((playerFound && isPlayerPowerUp )|| (fleeing))
     {
         // Agent is escaping from player
-        nearestPickupLocation = FindNearestHidingLocation();
+        nearestPickupLocation = FindBestHidingLocation();
         fleeing = true;
 
     }
@@ -205,12 +204,13 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 
     UpdateTarget(nearestPickupLocation);
 
-    if (playerFound && !isPlayerPowerUp  && FVector::DistXY(GetPawn()->GetActorLocation(), playerLocation) < 50) {
+    if (playerFound && !isPlayerPowerUp  && FVector::DistXY(GetPawn()->GetActorLocation(), playerLocation) < 100) {
         playerFound = false;
     }
 
-    if (fleeing && FVector::DistXY(GetPawn()->GetActorLocation(), nearestPickupLocation) < 50) {
+    if (fleeing && FVector::DistXY(GetPawn()->GetActorLocation(), nearestPickupLocation) < 100) {
         fleeing = false;
+        isPlayerPowerUp = false;
     }
 
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
@@ -274,4 +274,5 @@ void ASDTAIController::AIStateInterrupted()
 {
     StopMovement();
     m_ReachedTarget = true;
+    fleeing = false;
 }
