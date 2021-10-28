@@ -188,13 +188,14 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     
     if (playerFound && !isPlayerPowerUp) {
         nearestPickupLocation = playerLocation;
+        m_NewSpeed = m_RunningSpeed;
     }
     else if ((playerFound && isPlayerPowerUp )|| (fleeing))
     {
         // Agent is escaping from player
         nearestPickupLocation = FindBestHidingLocation();
         fleeing = true;
-
+        m_NewSpeed = m_RunningSpeed;
     }
     else {
         // last priority
@@ -206,15 +207,29 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 
     if (playerFound && !isPlayerPowerUp  && FVector::DistXY(GetPawn()->GetActorLocation(), playerLocation) < 100) {
         playerFound = false;
+        m_NewSpeed = m_WalkingSpeed;
     }
 
     if (fleeing && FVector::DistXY(GetPawn()->GetActorLocation(), nearestPickupLocation) < 100) {
         fleeing = false;
         isPlayerPowerUp = false;
+        playerFound = false;
+        m_NewSpeed = m_WalkingSpeed;
     }
-
+    if (m_MovementSpeed != m_NewSpeed) { changeSpeed(); }
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
     ShowNavigationPath();
+}
+
+void ASDTAIController::changeSpeed() {
+    
+    if (m_NewSpeed < m_MovementSpeed) {
+        m_MovementSpeed -= 20.f;
+    }
+
+    else if (m_NewSpeed > m_MovementSpeed) {
+        m_MovementSpeed += 10.f;
+    }
 }
 
 /*
@@ -277,4 +292,5 @@ void ASDTAIController::AIStateInterrupted()
     fleeing = false;
     isPlayerPowerUp = false;
     playerFound = false;
+    m_MovementSpeed = m_WalkingSpeed;
 }

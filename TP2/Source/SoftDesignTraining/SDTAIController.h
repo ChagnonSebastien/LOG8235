@@ -23,7 +23,16 @@ public:
     ASDTAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
-    float m_MovementSpeed = 400.f;
+    float m_MovementSpeed = 250.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+    float m_NewSpeed = 250.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+    float m_WalkingSpeed = 250.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+    float m_RunningSpeed = 600.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float m_DetectionCapsuleHalfLength = 500.f;
@@ -77,4 +86,5 @@ private:
     virtual UNavigationPath* ComputePathToTarget(FVector targetLocation);
     virtual void UpdateTarget(FVector targetLocation);
     virtual void findPlayer(FHitResult hit);
+    virtual void changeSpeed();
 };
