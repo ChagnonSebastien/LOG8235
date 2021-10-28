@@ -58,10 +58,11 @@ public:
 
 protected:
     void OnMoveToTarget();
-    void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit, bool& playerFound);
+    void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit);
     void UpdatePlayerInteraction(float deltaTime);
     bool fleeing = false;  // TO MOOVE ELSEWHERE ?
     bool isPlayerPowerUp = false;  // TO MOOVE ELSEWHERE ?
+    bool playerFound = false;
     FVector playerLocation = { 9999,9999,9999 };  // TO MOOVE ELSEWHERE ?
     FVector m_targetLocation = FVector();
     UNavigationPath* m_pathToTarget = nullptr;
@@ -75,5 +76,5 @@ private:
     virtual FVector FindNearestHidingLocation();
     virtual UNavigationPath* ComputePathToTarget(FVector targetLocation);
     virtual void UpdateTarget(FVector targetLocation);
-    virtual void findPlayer(FHitResult hit, bool& playerFound);
+    virtual void findPlayer(FHitResult hit);
 };

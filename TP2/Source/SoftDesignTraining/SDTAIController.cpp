@@ -158,8 +158,6 @@ void ASDTAIController::ChooseBehavior(float deltaTime)
 
 void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 {
-
-    bool playerFound = false; // TO MOOVE ELSEWHERE ?
     //finish jump before updating AI state
     if (AtJumpSegment)
         return;
@@ -183,24 +181,37 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     GetWorld()->SweepMultiByObjectType(allDetectionHits, detectionStartLocation, detectionEndLocation, FQuat::Identity, detectionTraceObjectTypes, FCollisionShape::MakeSphere(m_DetectionCapsuleRadius));
 
     FHitResult detectionHit;
-    GetHightestPriorityDetectionHit(allDetectionHits, detectionHit, playerFound);
+    GetHightestPriorityDetectionHit(allDetectionHits, detectionHit);
 
     //Set behavior based on hit
 
-    FVector nearestPickupLocation = FindNearestPickupLocation();
+    FVector nearestPickupLocation;
     
-
-    if ((playerFound && isPlayerPowerUp )|| (fleeing))
+    if (playerFound && !isPlayerPowerUp) {
+        nearestPickupLocation = playerLocation;
+    }
+    else if ((playerFound && isPlayerPowerUp )|| (fleeing))
     {
         // Agent is escaping from player
         nearestPickupLocation = FindNearestHidingLocation();
         fleeing = true;
 
-    } 
+    }
+    else {
+        // last priority
+        nearestPickupLocation = FindNearestPickupLocation();
+    }
     if (!isPlayerPowerUp) { fleeing = false; }
-    else if (!fleeing){ nearestPickupLocation = FindNearestPickupLocation(); }
 
     UpdateTarget(nearestPickupLocation);
+
+    if (playerFound && !isPlayerPowerUp  && FVector::DistXY(GetPawn()->GetActorLocation(), playerLocation) < 50) {
+        playerFound = false;
+    }
+
+    if (fleeing && FVector::DistXY(GetPawn()->GetActorLocation(), nearestPickupLocation) < 50) {
+        fleeing = false;
+    }
 
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
     ShowNavigationPath();
@@ -219,7 +230,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     playerLocation (FVector&) : player's location if player is found, else null
 * Return: None
 */
-void ASDTAIController::findPlayer(FHitResult hit, bool& playerFound) {
+void ASDTAIController::findPlayer(FHitResult hit) {
     struct FHitResult hitResult;
     FCollisionQueryParams params = FCollisionQueryParams();
     params.AddIgnoredActor(GetPawn());
@@ -227,14 +238,14 @@ void ASDTAIController::findPlayer(FHitResult hit, bool& playerFound) {
         if (hitResult.GetComponent()->GetCollisionObjectType() == COLLISION_PLAYER) {
             if (ASoftDesignTrainingMainCharacter* player = Cast<ASoftDesignTrainingMainCharacter>(hit.GetActor())) {
                 playerFound = true;
-                playerLocation = hit.GetActor()->GetActorLocation();  
+                playerLocation = hit.GetActor()->GetActorLocation();
                 isPlayerPowerUp = player->IsPoweredUp();
             }
         }
     }
 }
 
-void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit, bool& playerFound)
+void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit)
 {
     for (const FHitResult& hit : hits)
     {
@@ -244,7 +255,11 @@ void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>&
             {
                 //we can't get more important than the player
                 outDetectionHit = hit;
-                findPlayer(hit, playerFound);
+                findPlayer(hit);
+                return;
+            }
+            else if (playerFound) {
+                // The AI character has to get to the last player location
                 return;
             }
             else if (component->GetCollisionObjectType() == COLLISION_COLLECTIBLE)
