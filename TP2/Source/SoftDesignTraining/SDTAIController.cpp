@@ -6,6 +6,7 @@
 #include "SDTCollectible.h"
 #include "SDTFleeLocation.h"
 #include "SDTPathFollowingComponent.h"
+#include "SoftDesignTrainingMainCharacter.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -69,6 +70,35 @@ FVector ASDTAIController::FindNearestPickupLocation()
     return shortestPathTargetLocation;
 }
 
+FVector ASDTAIController::FindNearestHidingLocation()
+{
+    float shortestPathLength = 999999999999.9f;
+    FVector shortestPathTargetLocation = FVector();
+
+    // For each hiding location on the map...
+    TArray<AActor*> hidingPlaces;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASDTFleeLocation::StaticClass(), hidingPlaces);
+    for (auto* hidingActor : hidingPlaces) {
+
+        // Only consider pickups that are not on cooldown
+        auto* hidingPlace = Cast<ASDTFleeLocation>(hidingActor);
+
+        // Get the hiding place location and compute the AI agent's path to its location
+        FVector hidingLocation = hidingPlace->GetActorLocation();
+        UNavigationPath* pathToHiding = ComputePathToTarget(hidingLocation);
+
+        // If the path's length is the shortest we have seen yet, we save it
+        float pathToHidingLength = pathToHiding->GetPathLength();
+        if (pathToHidingLength < shortestPathLength) {
+            shortestPathLength = pathToHidingLength;
+            shortestPathTargetLocation = hidingLocation;
+        }
+    }
+
+    // We return the location of the nearest hiding place based on shortest path length
+    return shortestPathTargetLocation;
+}
+
 UNavigationPath* ASDTAIController::ComputePathToTarget(FVector targetLocation) {
     UNavigationSystemV1* navigationSystem = UNavigationSystemV1::GetCurrent(GetWorld());
     FVector myLocation = GetPawn()->GetActorLocation();
@@ -120,6 +150,9 @@ void ASDTAIController::ChooseBehavior(float deltaTime)
 
 void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 {
+
+    bool playerFound = false; // TO MOOVE ELSEWHERE
+    bool isPlayerPowerUp = false;  // TO MOOVE ELSEWHERE
     //finish jump before updating AI state
     if (AtJumpSegment)
         return;
@@ -143,18 +176,54 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     GetWorld()->SweepMultiByObjectType(allDetectionHits, detectionStartLocation, detectionEndLocation, FQuat::Identity, detectionTraceObjectTypes, FCollisionShape::MakeSphere(m_DetectionCapsuleRadius));
 
     FHitResult detectionHit;
-    GetHightestPriorityDetectionHit(allDetectionHits, detectionHit);
+    GetHightestPriorityDetectionHit(allDetectionHits, detectionHit, playerFound, isPlayerPowerUp);
 
     //Set behavior based on hit
 
     FVector nearestPickupLocation = FindNearestPickupLocation();
+    
+
+    if (playerFound && isPlayerPowerUp)
+    {
+        // Agent is escaping from player
+        nearestPickupLocation = FindNearestHidingLocation();
+    }
+
     UpdateTarget(nearestPickupLocation);
 
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
     ShowNavigationPath();
 }
 
-void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit)
+/*
+* Name: findPlayer
+* Description:
+    Function that verify if a player is in the agent's detection sphere
+    without being behind a wall and return that position and player's
+    power up status if a player is found.
+* Args:
+    hit (FHitResult) : A collision hit result
+    playerFound (bool&) : True if a player is found, else false
+    isPlayerPowerUp (bool&) : True if a player is powered up, else false
+    playerLocation (FVector&) : player's location if player is found, else null
+* Return: None
+*/
+void ASDTAIController::findPlayer(FHitResult hit, bool& playerFound, bool& isPlayerPowerUp) {
+    struct FHitResult hitResult;
+    FCollisionQueryParams params = FCollisionQueryParams();
+    params.AddIgnoredActor(GetPawn());
+    if (GetWorld()->LineTraceSingleByObjectType(hitResult, GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FCollisionObjectQueryParams::AllObjects, params)) {
+        if (hitResult.GetComponent()->GetCollisionObjectType() == COLLISION_PLAYER) {
+            if (ASoftDesignTrainingMainCharacter* player = Cast<ASoftDesignTrainingMainCharacter>(hit.GetActor())) {
+                playerFound = true;
+                //playerLocation = hit.GetActor()->GetActorLocation();  TO USE?
+                isPlayerPowerUp = player->IsPoweredUp();
+            }
+        }
+    }
+}
+
+void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit, bool& playerFound, bool& isPlayerPowerUp)
 {
     for (const FHitResult& hit : hits)
     {
@@ -164,6 +233,7 @@ void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>&
             {
                 //we can't get more important than the player
                 outDetectionHit = hit;
+                findPlayer(hit, playerFound, isPlayerPowerUp);
                 return;
             }
             else if (component->GetCollisionObjectType() == COLLISION_COLLECTIBLE)
