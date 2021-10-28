@@ -275,4 +275,6 @@ void ASDTAIController::AIStateInterrupted()
     StopMovement();
     m_ReachedTarget = true;
     fleeing = false;
+    isPlayerPowerUp = false;
+    playerFound = false;
 }
