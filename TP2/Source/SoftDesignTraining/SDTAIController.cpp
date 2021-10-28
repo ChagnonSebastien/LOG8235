@@ -72,7 +72,7 @@ FVector ASDTAIController::FindNearestPickupLocation()
     return shortestPathTargetLocation;
 }
 
-FVector ASDTAIController::FindNearestHidingLocation()
+FVector ASDTAIController::FindBestHidingLocation()
 {
     float shortestPathLength = 999999999999.9f;
     FVector shortestPathTargetLocation = FVector();
@@ -82,18 +82,17 @@ FVector ASDTAIController::FindNearestHidingLocation()
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASDTFleeLocation::StaticClass(), hidingPlaces);
     for (auto* hidingActor : hidingPlaces) {
 
-        // Only consider pickups that are not on cooldown
         auto* hidingPlace = Cast<ASDTFleeLocation>(hidingActor);
 
         // Get the hiding place location and compute the AI agent's path to its location
         FVector hidingLocation = hidingPlace->GetActorLocation();
         UNavigationPath* pathToHiding = ComputePathToTarget(hidingLocation);
 
-        // If the path's length is the shortest we have seen yet, we save it
+        // If the path's length is the shortest we have seen yet and the agent has a smaller euclidian distance to the spot than the player, we save it
         float pathToHidingLength = pathToHiding->GetPathLength();
-        float playerDistanceToSpot = sqrt(abs(playerLocation.X - hidingPlace->GetActorLocation().X) + abs(playerLocation.Y - hidingPlace->GetActorLocation().Y));
+        float playerDistanceToSpot = FVector::DistXY(playerLocation,hidingPlace->GetActorLocation()); 
         FVector agentLocation = GetPawn()->GetActorLocation();
-        float agentDistanceToSpot = sqrt(abs(agentLocation.X - hidingPlace->GetActorLocation().X) + abs(agentLocation.Y - hidingPlace->GetActorLocation().Y));
+        float agentDistanceToSpot = FVector::DistXY(agentLocation, hidingPlace->GetActorLocation()); 
 
         bool playerTooClose = playerDistanceToSpot < agentDistanceToSpot;
 
@@ -158,8 +157,8 @@ void ASDTAIController::ChooseBehavior(float deltaTime)
 
 void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 {
-
-    bool playerFound = false; // TO MOOVE ELSEWHERE ?
+    bool isPlayerPowerUp = false;
+    bool playerFound = false; 
     //finish jump before updating AI state
     if (AtJumpSegment)
         return;
@@ -183,24 +182,26 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     GetWorld()->SweepMultiByObjectType(allDetectionHits, detectionStartLocation, detectionEndLocation, FQuat::Identity, detectionTraceObjectTypes, FCollisionShape::MakeSphere(m_DetectionCapsuleRadius));
 
     FHitResult detectionHit;
-    GetHightestPriorityDetectionHit(allDetectionHits, detectionHit, playerFound);
+    GetHightestPriorityDetectionHit(allDetectionHits, detectionHit, playerFound, isPlayerPowerUp);
 
     //Set behavior based on hit
 
     FVector nearestPickupLocation = FindNearestPickupLocation();
     
 
-    if ((playerFound && isPlayerPowerUp )|| (fleeing))
+    if ((playerFound && isPlayerPowerUp ) || (fleeing))
     {
         // Agent is escaping from player
-        nearestPickupLocation = FindNearestHidingLocation();
+        nearestPickupLocation = FindBestHidingLocation();
         fleeing = true;
-
     } 
-    if (!isPlayerPowerUp) { fleeing = false; }
     else if (!fleeing){ nearestPickupLocation = FindNearestPickupLocation(); }
 
     UpdateTarget(nearestPickupLocation);
+
+    if (fleeing && FVector::DistXY(GetPawn()->GetActorLocation(), nearestPickupLocation) < 50) {
+        fleeing = false;
+    }
 
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
     ShowNavigationPath();
@@ -219,7 +220,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     playerLocation (FVector&) : player's location if player is found, else null
 * Return: None
 */
-void ASDTAIController::findPlayer(FHitResult hit, bool& playerFound) {
+void ASDTAIController::findPlayer(FHitResult hit, bool& playerFound, bool& isPlayerPowerUp) {
     struct FHitResult hitResult;
     FCollisionQueryParams params = FCollisionQueryParams();
     params.AddIgnoredActor(GetPawn());
@@ -234,7 +235,7 @@ void ASDTAIController::findPlayer(FHitResult hit, bool& playerFound) {
     }
 }
 
-void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit, bool& playerFound)
+void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit, bool& playerFound, bool& isPlayerPowerUp)
 {
     for (const FHitResult& hit : hits)
     {
@@ -244,7 +245,7 @@ void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>&
             {
                 //we can't get more important than the player
                 outDetectionHit = hit;
-                findPlayer(hit, playerFound);
+                findPlayer(hit, playerFound, isPlayerPowerUp);
                 return;
             }
             else if (component->GetCollisionObjectType() == COLLISION_COLLECTIBLE)
@@ -259,4 +260,5 @@ void ASDTAIController::AIStateInterrupted()
 {
     StopMovement();
     m_ReachedTarget = true;
+    fleeing = false;
 }

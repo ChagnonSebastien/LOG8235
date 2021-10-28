@@ -58,11 +58,10 @@ public:
 
 protected:
     void OnMoveToTarget();
-    void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit, bool& playerFound);
+    void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit, bool& playerFound, bool& isPlayerPowerUp);
     void UpdatePlayerInteraction(float deltaTime);
-    bool fleeing = false;  // TO MOOVE ELSEWHERE ?
-    bool isPlayerPowerUp = false;  // TO MOOVE ELSEWHERE ?
-    FVector playerLocation = { 9999,9999,9999 };  // TO MOOVE ELSEWHERE ?
+    bool fleeing = false; 
+    FVector playerLocation = { 9999,9999,9999 }; 
     FVector m_targetLocation = FVector();
     UNavigationPath* m_pathToTarget = nullptr;
 
@@ -72,8 +71,8 @@ private:
     virtual void ShowNavigationPath() override;
     virtual void DisplayNavigationPath(UNavigationPath* path, FColor color);
     virtual FVector FindNearestPickupLocation();
-    virtual FVector FindNearestHidingLocation();
+    virtual FVector FindBestHidingLocation();
     virtual UNavigationPath* ComputePathToTarget(FVector targetLocation);
     virtual void UpdateTarget(FVector targetLocation);
-    virtual void findPlayer(FHitResult hit, bool& playerFound);
+    virtual void findPlayer(FHitResult hit, bool& playerFound, bool& isPlayerPowerUp);
 };
