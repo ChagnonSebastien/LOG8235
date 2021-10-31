@@ -290,13 +290,15 @@ void ASDTAIController::AIStateInterrupted()
 }
 
 void ASDTAIController::SetJumpDistance(float factor) {
-    if (!FloorHeight.IsValid())
-    {
-        FloorHeight = MakeShared<float>(GetPawn()->GetActorLocation().Z);
-    }
 
-    FVector prev = GetPawn()->GetActorLocation();
-    GetPawn()->SetActorLocation(FVector(prev.X, prev.Y, *FloorHeight.Get() + JumpCurve->GetFloatValue(factor) * JumpApexHeight));
+    USkeletalMeshComponent* skeleton = (USkeletalMeshComponent*)GetPawn()->GetComponentByClass(USkeletalMeshComponent::StaticClass());
+    if (skeleton) {
+        if (!FloorHeight.IsValid())
+        {
+            FloorHeight = MakeShared<float>(skeleton->GetRelativeLocation().Z);
+        }
+        skeleton->SetRelativeLocation(FVector(0, 0, *FloorHeight.Get() + JumpCurve->GetFloatValue(factor) * JumpApexHeight));
+    }
 }
 
 void ASDTAIController::FinishedJumpingInitialization()
