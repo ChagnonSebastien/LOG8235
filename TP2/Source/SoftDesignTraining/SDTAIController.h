@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "NavigationSystem.h"
+#include "Templates/SharedPointer.h"
 #include "SDTBaseAIController.h"
 #include "SDTPathFollowingComponent.h"
 #include "SDTAIController.generated.h"
@@ -59,11 +60,19 @@ public:
     bool InAir = false;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
-    bool Landing = false;
+    bool Landing = true;
 
 public:
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
     void AIStateInterrupted();
+
+    UFUNCTION(BlueprintCallable, Category = AI)
+    void FinishedJumpingInitialization();
+
+    UFUNCTION(BlueprintCallable, Category = AI)
+    void FinishedLanding();
+
+    void SetJumpDistance(float factor);
 
 protected:
     void OnMoveToTarget();
@@ -77,14 +86,15 @@ protected:
     UNavigationPath* m_pathToTarget = nullptr;
 
 private:
+    TSharedPtr<float> FloorHeight = nullptr;
+
     virtual void GoToBestTarget(float deltaTime) override;
     virtual void ChooseBehavior(float deltaTime) override;
     virtual void ShowNavigationPath() override;
-    virtual void DisplayNavigationPath(UNavigationPath* path, FColor color);
+    virtual void DisplayNavigationPath(UNavigationPath* path, bool main);
     virtual FVector FindNearestPickupLocation();
     virtual FVector FindBestHidingLocation();
     virtual UNavigationPath* ComputePathToTarget(FVector targetLocation);
-    virtual void UpdateTarget(FVector targetLocation);
     virtual void findPlayer(FHitResult hit);
-    virtual void changeSpeed();
+    virtual void UpdateSpeed();
 };
