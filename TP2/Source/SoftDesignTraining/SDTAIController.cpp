@@ -33,7 +33,7 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 }
 
 void ASDTAIController::UpdateSpeed() {
-    if (AtJumpSegment)
+    if (AtJumpSegment || CloseToJumpSegment)
     {
         m_NewSpeed = m_RunningSpeed * JumpSpeed;
     }

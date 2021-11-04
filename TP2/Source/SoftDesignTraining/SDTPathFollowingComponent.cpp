@@ -36,19 +36,27 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
         
         // Smoothly update AI agent rotation based on orientation
         FQuat rotation = FRotationMatrix::MakeFromXZ(orientation, FVector::UpVector).ToQuat();
-        controller->GetPawn()->SetActorRotation(FMath::Lerp(controller->GetPawn()->GetActorRotation(), orientation.Rotation(), 0.05f));
+        controller->GetPawn()->SetActorRotation(FMath::Lerp(controller->GetPawn()->GetActorRotation(), orientation.Rotation(), 0.055f));
         
         // Update AI agent location based on orientation and movement speed
         FVector newLocation;
-        if (controller->m_MovementSpeed * DeltaTime * 10 > FVector::Dist2D(segmentStart, segmentEnd) || controller->AtJumpSegment)
+        bool isNextSegmentJump = IsSegmentNavigationLink(MoveSegmentEndIndex);
+        bool isCloseToNextSegment = controller->m_MovementSpeed * DeltaTime * 100 > FVector::Dist2D(currentLocation, segmentEnd);
+        bool isVeryCloseToNextSegment = controller->m_MovementSpeed * DeltaTime * 10 > FVector::Dist2D(currentLocation, segmentEnd);
+        bool isJumping = IsSegmentNavigationLink(MoveSegmentStartIndex);
+        FVector currentRotation = controller->GetPawn()->GetActorRotation().Vector();
+        bool isFacingGoal = FVector2D::DotProduct(FVector2D(currentLocation), FVector2D(orientation)) > 0;
+        bool isAbountToJump = isNextSegmentJump && (isVeryCloseToNextSegment || isCloseToNextSegment && isFacingGoal);
+        if (isAbountToJump || isJumping)
         {
             newLocation = currentLocation + controller->m_MovementSpeed * DeltaTime * orientation;
         }
         else
         {
-            newLocation = currentLocation + controller->m_MovementSpeed * DeltaTime * controller->GetPawn()->GetActorRotation().Vector();
+            newLocation = currentLocation + controller->m_MovementSpeed * DeltaTime * currentRotation;
         }
         controller->GetPawn()->SetActorLocation(newLocation);
+        controller->CloseToJumpSegment = isAbountToJump;
     }
 }
 
@@ -92,4 +100,15 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
         color = FColor(0, 0, 255);
     }
     DrawDebugSphere(GetWorld(), controller->GetPawn()->GetActorLocation() + FVector::UpVector * 120.0f, 10.0f, 32, color);
+}
+
+bool USDTPathFollowingComponent::IsSegmentNavigationLink(int32 segmentStartIndex)
+{
+    const TArray<FNavPathPoint>& points = Path->GetPathPoints();
+    if (segmentStartIndex + 1 >= points.Num())
+    {
+        return false;
+    }
+    const FNavPathPoint& segmentStart = points[segmentStartIndex];
+    return FNavMeshNodeFlags(segmentStart.Flags).IsNavLink();
 }
