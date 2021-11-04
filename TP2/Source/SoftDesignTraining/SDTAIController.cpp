@@ -244,7 +244,14 @@ void ASDTAIController::findPlayer(FHitResult hit) {
     struct FHitResult hitResult;
     FCollisionQueryParams params = FCollisionQueryParams();
     params.AddIgnoredActor(GetPawn());
-    if (GetWorld()->LineTraceSingleByObjectType(hitResult, GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FCollisionObjectQueryParams::AllObjects, params)) {
+
+    UCapsuleComponent* const boundingBox = (UCapsuleComponent*)GetPawn()->GetComponentByClass(UCapsuleComponent::StaticClass());
+    float boudingBoxRadius = boundingBox->GetScaledCapsuleRadius();
+    FVector boundingBoxOffset = GetPawn()->GetActorForwardVector().GetSafeNormal();
+    boundingBoxOffset.X = boundingBoxOffset.X * boudingBoxRadius;
+    boundingBoxOffset.Y = boundingBoxOffset.Y * boudingBoxRadius;
+
+    if (GetWorld()->LineTraceSingleByObjectType(hitResult, GetPawn()->GetActorLocation() + boundingBoxOffset, hit.GetActor()->GetActorLocation(), FCollisionObjectQueryParams::AllObjects, params)) {
         if (hitResult.GetComponent()->GetCollisionObjectType() == COLLISION_PLAYER) {
             if (ASoftDesignTrainingMainCharacter* player = Cast<ASoftDesignTrainingMainCharacter>(hit.GetActor())) {
                 playerFound = true;
