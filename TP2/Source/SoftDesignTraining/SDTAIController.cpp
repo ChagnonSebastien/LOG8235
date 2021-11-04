@@ -137,7 +137,7 @@ void ASDTAIController::DisplayNavigationPath(UNavigationPath* path, bool active)
     FVector height = active ? FVector(0, 0, 50) : FVector(0, 0, 51);
     float radius = active ? 10.0f : 5.0f;
 
-    if (path != NULL)
+    if (path != NULL && path->PathPoints.Num() > 1)
     {
         // For each point in the path from the AI agent to the target...
         for (int i = 0; i < path->PathPoints.Num(); ++i)
