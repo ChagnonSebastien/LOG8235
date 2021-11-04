@@ -39,7 +39,15 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
         controller->GetPawn()->SetActorRotation(FMath::Lerp(controller->GetPawn()->GetActorRotation(), orientation.Rotation(), 0.05f));
         
         // Update AI agent location based on orientation and movement speed
-        FVector newLocation = currentLocation + controller->m_MovementSpeed * DeltaTime * orientation;
+        FVector newLocation;
+        if (controller->m_MovementSpeed * DeltaTime * 10 > FVector::Dist2D(segmentStart, segmentEnd) || controller->AtJumpSegment)
+        {
+            newLocation = currentLocation + controller->m_MovementSpeed * DeltaTime * orientation;
+        }
+        else
+        {
+            newLocation = currentLocation + controller->m_MovementSpeed * DeltaTime * controller->GetPawn()->GetActorRotation().Vector();
+        }
         controller->GetPawn()->SetActorLocation(newLocation);
     }
 }
