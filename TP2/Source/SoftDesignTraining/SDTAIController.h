@@ -63,6 +63,8 @@ public:
     bool Landing = true;
 
 public:
+    bool CloseToJumpSegment = false;
+
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
     void AIStateInterrupted();
 
