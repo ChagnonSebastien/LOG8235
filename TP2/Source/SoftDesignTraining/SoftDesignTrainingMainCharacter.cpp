@@ -26,12 +26,17 @@ ASoftDesignTrainingMainCharacter::ASoftDesignTrainingMainCharacter()
 
 void ASoftDesignTrainingMainCharacter::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+    if (OtherComponent->GetCollisionObjectType() == COLLISION_DEATH_OBJECT && GetController() == GEngine->GetFirstLocalPlayerController(GetWorld()))
+    {
+        OnPowerUpDone();
+    }
     Super::OnBeginOverlap(OverlappedComponent, OtherActor, OtherComponent, OtherBodyIndex, bFromSweep, SweepResult);
 
     if (ASoftDesignTrainingCharacter* character = Cast<ASoftDesignTrainingCharacter>(OtherActor))
     {
-        if (!IsPoweredUp())
+        if (!IsPoweredUp()) {
             SetActorLocation(m_StartingPosition);
+        }
     }
 }
 
