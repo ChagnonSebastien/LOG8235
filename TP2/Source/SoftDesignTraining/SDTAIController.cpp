@@ -27,8 +27,10 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     UpdateSpeed();
 
     // Update path follower with new path
-    GetPathFollowingComponent()->RequestMove(FAIMoveRequest(), m_pathToTarget->GetPath());
-
+    if (m_pathToTarget != NULL) {
+        GetPathFollowingComponent()->RequestMove(FAIMoveRequest(), m_pathToTarget->GetPath());
+    }
+    
 
 }
 
@@ -105,7 +107,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     {
         goal = isPlayerPowerUp ? FindBestHidingLocation() : playerLocation;
 
-        if (FVector::DistXY(GetPawn()->GetActorLocation(), goal) < 100)
+        if (FVector::DistXY(GetPawn()->GetActorLocation(), goal) < 75)
         {
             m_MovementSpeed = 0.f;
             playerFound = false;
@@ -121,8 +123,11 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     m_targetLocation = goal;
 
     // Update path to target
-    m_pathToTarget = ComputePathToTarget(goal);
-
+    UNavigationPath* tempPath = ComputePathToTarget(goal);
+    if (tempPath != NULL) {
+        m_pathToTarget = tempPath;
+    }
+    
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
 }
 
