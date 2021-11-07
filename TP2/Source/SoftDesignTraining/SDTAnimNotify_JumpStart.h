@@ -7,7 +7,7 @@
 #include "SDTAnimNotify_JumpStart.generated.h"
 
 /**
- * 
+ * An animation notification that signals jump start.
  */
 UCLASS()
 class SOFTDESIGNTRAINING_API USDTAnimNotify_JumpStart : public UAnimNotify
@@ -15,6 +15,4 @@ class SOFTDESIGNTRAINING_API USDTAnimNotify_JumpStart : public UAnimNotify
 	GENERATED_BODY()
 	
     virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
-	
-	
 };

@@ -5,6 +5,12 @@
 #include "SDTAIController.h"
 #include "SoftDesignTrainingCharacter.h"
 
+/**
+ * Notifies jump start.
+ * 
+ * @param MeshComp  The skeletal mesh component.
+ * @param Animation The animation sequence.
+ */
 void USDTAnimNotify_JumpStart::Notify(USkeletalMeshComponent * MeshComp, UAnimSequenceBase * Animation)
 {
     //Notify that the NPC has launched
