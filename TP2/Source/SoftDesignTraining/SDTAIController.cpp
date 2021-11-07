@@ -119,14 +119,17 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
         goal = FindNearestPickupLocation();
     }
 
+    // Check if the goal position can be projected onto the NavMesh
+    FNavLocation navLocation;
+    bool isTargetPositionNavigable = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem())->ProjectPointToNavigation(goal, navLocation);
+    if (!isTargetPositionNavigable)
+        return;
+
     // Update target location
     m_targetLocation = goal;
 
     // Update path to target
-    UNavigationPath* tempPath = ComputePathToTarget(goal);
-    if (tempPath != NULL) {
-        m_pathToTarget = tempPath;
-    }
+    m_pathToTarget = ComputePathToTarget(goal);
     
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
 }
