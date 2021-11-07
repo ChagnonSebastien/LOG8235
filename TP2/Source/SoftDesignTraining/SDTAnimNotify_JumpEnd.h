@@ -7,7 +7,7 @@
 #include "SDTAnimNotify_JumpEnd.generated.h"
 
 /**
- * 
+ * An animation notification that signals jump end.
  */
 UCLASS()
 class SOFTDESIGNTRAINING_API USDTAnimNotify_JumpEnd : public UAnimNotify
