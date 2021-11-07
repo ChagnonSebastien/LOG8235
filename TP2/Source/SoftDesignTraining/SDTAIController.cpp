@@ -173,14 +173,16 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 
     //Set behavior based on hit
     FVector goal;
+    INT distanceThreshold;
 
     if (playerFound)
     {
         goal = isPlayerPowerUp ? FindBestHidingLocation() : playerLocation;
+        distanceThreshold = isPlayerPowerUp ? 100 : 75;
 
-        if (FVector::DistXY(GetPawn()->GetActorLocation(), goal) < 75)
+        if (FVector::DistXY(GetPawn()->GetActorLocation(), goal) < distanceThreshold)
         {
-            //m_MovementSpeed = 0.f;
+            if(isPlayerPowerUp) m_MovementSpeed = 0.f;
             playerFound = false;
         }
     }
