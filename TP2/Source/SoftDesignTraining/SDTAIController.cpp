@@ -78,7 +78,7 @@ void ASDTAIController::ChooseBehavior(float deltaTime)
 void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 {
     //finish jump before updating AI state
-    if (AtJumpSegment)
+    if (AtJumpSegment || CloseToJumpSegment)
         return;
 
     APawn* selfPawn = GetPawn();
@@ -287,7 +287,7 @@ void ASDTAIController::AIStateInterrupted()
     m_ReachedTarget = true;
     isPlayerPowerUp = false;
     playerFound = false;
-    m_MovementSpeed = m_WalkingSpeed;
+    m_MovementSpeed = 0;
 }
 
 void ASDTAIController::SetJumpDistance(float factor) {
