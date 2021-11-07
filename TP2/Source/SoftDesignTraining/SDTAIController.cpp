@@ -27,8 +27,10 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     UpdateSpeed();
 
     // Update path follower with new path
-    GetPathFollowingComponent()->RequestMove(FAIMoveRequest(), m_pathToTarget->GetPath());
-
+    if (m_pathToTarget != NULL) {
+        GetPathFollowingComponent()->RequestMove(FAIMoveRequest(), m_pathToTarget->GetPath());
+    }
+    
 
 }
 
@@ -105,9 +107,9 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     {
         goal = isPlayerPowerUp ? FindBestHidingLocation() : playerLocation;
 
-        if (FVector::DistXY(GetPawn()->GetActorLocation(), goal) < 100)
+        if (FVector::DistXY(GetPawn()->GetActorLocation(), goal) < 75)
         {
-            m_MovementSpeed = 0.f;
+            //m_MovementSpeed = 0.f;
             playerFound = false;
         }
     }
@@ -117,12 +119,18 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
         goal = FindNearestPickupLocation();
     }
 
+    // Check if the goal position can be projected onto the NavMesh
+    FNavLocation navLocation;
+    bool isTargetPositionNavigable = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem())->ProjectPointToNavigation(goal, navLocation);
+    if (!isTargetPositionNavigable)
+        return;
+
     // Update target location
     m_targetLocation = goal;
 
     // Update path to target
     m_pathToTarget = ComputePathToTarget(goal);
-
+    
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
 }
 
@@ -188,6 +196,16 @@ FVector ASDTAIController::FindNearestPickupLocation()
     return shortestPathTargetLocation;
 }
 
+/*
+* Name: FindBestHidingLocation
+* Description:
+    Function that chooses which hiding spot is the best hiding spot 
+    for a given agent location and depending on the the player location.
+    The best hiding spot is the closest spot to the agent where the player 
+    is farther than the agent using the Euclidian distance as the heuristic.
+* Return: 
+    shortestPathTargetLocation (FVector) : Chosen best hiding spot location
+*/
 FVector ASDTAIController::FindBestHidingLocation()
 {
     float shortestPathLength = 999999999999.9f;
@@ -204,7 +222,7 @@ FVector ASDTAIController::FindBestHidingLocation()
         FVector hidingLocation = hidingPlace->GetActorLocation();
         UNavigationPath* pathToHiding = ComputePathToTarget(hidingLocation);
 
-        // If the path's length is the shortest we have seen yet and the agent has a smaller euclidian distance to the spot than the player, we save it
+        
         float pathToHidingLength = pathToHiding->GetPathLength();
         float playerDistanceToSpot = FVector::DistXY(playerLocation, hidingPlace->GetActorLocation());
         FVector agentLocation = GetPawn()->GetActorLocation();
@@ -212,6 +230,7 @@ FVector ASDTAIController::FindBestHidingLocation()
 
         bool playerTooClose = playerDistanceToSpot < agentDistanceToSpot;
 
+        // If the path's length is the shortest we have seen yet and the agent has a smaller Euclidian distance to the spot than the player, we save it
         if ((pathToHidingLength < shortestPathLength) && !playerTooClose) {
             shortestPathLength = pathToHidingLength;
             shortestPathTargetLocation = hidingLocation;
@@ -245,7 +264,14 @@ void ASDTAIController::findPlayer(FHitResult hit) {
     struct FHitResult hitResult;
     FCollisionQueryParams params = FCollisionQueryParams();
     params.AddIgnoredActor(GetPawn());
-    if (GetWorld()->LineTraceSingleByObjectType(hitResult, GetPawn()->GetActorLocation(), hit.GetActor()->GetActorLocation(), FCollisionObjectQueryParams::AllObjects, params)) {
+
+    UCapsuleComponent* const boundingBox = (UCapsuleComponent*)GetPawn()->GetComponentByClass(UCapsuleComponent::StaticClass());
+    float boudingBoxRadius = boundingBox->GetScaledCapsuleRadius();
+    FVector boundingBoxOffset = GetPawn()->GetActorForwardVector().GetSafeNormal();
+    boundingBoxOffset.X = boundingBoxOffset.X * boudingBoxRadius;
+    boundingBoxOffset.Y = boundingBoxOffset.Y * boudingBoxRadius;
+
+    if (GetWorld()->LineTraceSingleByObjectType(hitResult, GetPawn()->GetActorLocation() + boundingBoxOffset, hit.GetActor()->GetActorLocation(), FCollisionObjectQueryParams::AllObjects, params)) {
         if (hitResult.GetComponent()->GetCollisionObjectType() == COLLISION_PLAYER) {
             if (ASoftDesignTrainingMainCharacter* player = Cast<ASoftDesignTrainingMainCharacter>(hit.GetActor())) {
                 playerFound = true;

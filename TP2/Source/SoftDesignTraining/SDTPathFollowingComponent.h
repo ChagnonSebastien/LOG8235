@@ -6,6 +6,8 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "SDTPathFollowingComponent.generated.h"
 
+
+
 /**
 *
 */
@@ -20,4 +22,5 @@ public:
 
 private:
     bool IsSegmentNavigationLink(int32 segmentStartIndex);
+    void CalculateJumpDistance(FVector startLocation, FVector endLocation);
 };
