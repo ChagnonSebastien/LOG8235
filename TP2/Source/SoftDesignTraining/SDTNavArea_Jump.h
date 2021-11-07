@@ -7,7 +7,7 @@
 #include "SDTNavArea_Jump.generated.h"
 
 /**
- * 
+ * A navigation area indicating a jumping zone.
  */
 UCLASS()
 class SOFTDESIGNTRAINING_API USDTNavArea_Jump : public UNavArea
