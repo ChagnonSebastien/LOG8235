@@ -37,7 +37,46 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     UpdateSpeed();
 
     // Update path follower with new path
-    if (m_pathToTarget != NULL) {
+    if (AtJumpSegment) {
+        GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Yellow, TEXT("AtJumpSegment"));
+        FVector currentLocation = GetPawn()->GetActorLocation();
+        FVector orientation = LandingPoint - currentLocation;
+
+        // Check if we should initiate the landing sequence
+        if (FVector2D(orientation).Size() < 75)
+        {
+            Landing = true;
+
+            // Check if the goal position can be projected onto the NavMesh
+            FNavLocation navLocation;
+            bool isTargetPositionNavigable = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem())->ProjectPointToNavigation(currentLocation, navLocation);
+            if (isTargetPositionNavigable)
+            {
+                m_pathToTarget = nullptr;
+                AtJumpSegment = false;
+                GetPawn()->SetActorLocation(FVector(LandingPoint.X, LandingPoint.Y, currentLocation.Z));
+                SetJumpDistance(1);
+                return;
+            }
+
+        }
+
+        orientation.Normalize();
+
+        // Smoothly update AI agent rotation based on orientation
+        FQuat rotation = FRotationMatrix::MakeFromXZ(orientation, FVector::UpVector).ToQuat();
+        GetPawn()->SetActorRotation(FMath::Lerp(GetPawn()->GetActorRotation(), orientation.Rotation(), 0.05f));
+
+        // Update AI agent location based on orientation and movement speed
+        FVector newLocation = currentLocation + m_MovementSpeed * deltaTime * orientation;
+        GetPawn()->SetActorLocation(newLocation);
+
+        float totalDistance = FVector2D::Distance(FVector2D(JumpingPoint), FVector2D(LandingPoint));
+        float currentDistance = FVector2D::Distance(FVector2D(JumpingPoint), FVector2D(currentLocation));
+        SetJumpDistance(currentDistance / totalDistance);
+
+    }
+    else if (m_pathToTarget != NULL) {
         GetPathFollowingComponent()->RequestMove(FAIMoveRequest(), m_pathToTarget->GetPath());
     }
     
@@ -389,6 +428,15 @@ void ASDTAIController::SetJumpDistance(float factor) {
         }
         skeleton->SetRelativeLocation(FVector(0, 0, *FloorHeight.Get() + JumpCurve->GetFloatValue(factor) * JumpApexHeight));
     }
+}
+
+void ASDTAIController::Jump(FVector landingPoint)
+{
+    AtJumpSegment = true;
+    Landing = false;
+    LandingPoint = landingPoint;
+    JumpingPoint = GetPawn()->GetActorLocation();
+    CloseToJumpSegment = false;
 }
 
 /**

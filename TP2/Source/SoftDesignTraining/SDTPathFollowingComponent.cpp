@@ -30,43 +30,46 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
     const FNavPathPoint& segmentEnd = points[DetermineCurrentTargetPathPoint(MoveSegmentStartIndex)];
 
     ASDTAIController* controller = Cast<ASDTAIController>(GetOwner());
-    if (SDTUtils::HasJumpFlag(segmentStart))
+    if (controller->AtJumpSegment) return;
+
+    // Compute AI agent orientation
+    FVector currentLocation = controller->GetPawn()->GetActorLocation();
+    FVector orientation = segmentEnd.Location - segmentStart.Location;
+    orientation.Normalize();
+        
+    // Smoothly update AI agent rotation based on orientation
+    FQuat rotation = FRotationMatrix::MakeFromXZ(orientation, FVector::UpVector).ToQuat();
+    controller->GetPawn()->SetActorRotation(FMath::Lerp(controller->GetPawn()->GetActorRotation(), orientation.Rotation(), 0.055f));
+        
+    // Find the closest JumpSegment;
+    float closestDistance = 1000000.0f;
+    FVector ClosestJumpSegment = FVector(1000000, 1000000, 0);
+    for (int i = MoveSegmentEndIndex; i < points.Num() - 1; i++) {
+        const FNavPathPoint& point = points[i];
+        float distance = FVector2D::Distance(FVector2D(point.Location), FVector2D(currentLocation));
+        if (FNavMeshNodeFlags(point.Flags).IsNavLink() && distance < closestDistance) {
+            closestDistance = distance;
+            ClosestJumpSegment = point.Location;
+        }
+    }
+
+    // Update AI agent location based on orientation and movement speed
+    FVector newLocation;
+    bool isCloseToNextSegment = controller->m_MovementSpeed * DeltaTime * 100 > closestDistance;
+    bool isVeryCloseToNextSegment = controller->m_MovementSpeed * DeltaTime * 10 > closestDistance;
+    FVector currentRotation = controller->GetPawn()->GetActorRotation().Vector();
+    bool isFacingGoal = FVector2D::DotProduct(FVector2D(orientation), FVector2D(ClosestJumpSegment - currentLocation)) > 0;
+    bool isAbountToJump = isCloseToNextSegment && isFacingGoal;
+    if (isAbountToJump)
     {
-        // Update jump
+        newLocation = currentLocation + controller->m_MovementSpeed * DeltaTime * orientation;
     }
     else
     {
-        // Update navigation along path
-
-        // Compute AI agent orientation
-        FVector currentLocation = controller->GetPawn()->GetActorLocation();
-        FVector orientation = segmentEnd.Location - segmentStart.Location;
-        orientation.Normalize();
-        
-        // Smoothly update AI agent rotation based on orientation
-        FQuat rotation = FRotationMatrix::MakeFromXZ(orientation, FVector::UpVector).ToQuat();
-        controller->GetPawn()->SetActorRotation(FMath::Lerp(controller->GetPawn()->GetActorRotation(), orientation.Rotation(), 0.055f));
-        
-        // Update AI agent location based on orientation and movement speed
-        FVector newLocation;
-        bool isNextSegmentJump = IsSegmentNavigationLink(MoveSegmentEndIndex);
-        bool isCloseToNextSegment = controller->m_MovementSpeed * DeltaTime * 100 > FVector::Dist2D(currentLocation, segmentEnd);
-        bool isVeryCloseToNextSegment = controller->m_MovementSpeed * DeltaTime * 10 > FVector::Dist2D(currentLocation, segmentEnd);
-        bool isJumping = IsSegmentNavigationLink(MoveSegmentStartIndex);
-        FVector currentRotation = controller->GetPawn()->GetActorRotation().Vector();
-        bool isFacingGoal = FVector2D::DotProduct(FVector2D(currentLocation), FVector2D(orientation)) > 0;
-        bool isAbountToJump = isNextSegmentJump && (isVeryCloseToNextSegment || isCloseToNextSegment && isFacingGoal);
-        if (isAbountToJump || isJumping)
-        {
-            newLocation = currentLocation + controller->m_MovementSpeed * DeltaTime * orientation;
-        }
-        else
-        {
-            newLocation = currentLocation + controller->m_MovementSpeed * DeltaTime * currentRotation;
-        }
-        controller->GetPawn()->SetActorLocation(newLocation);
-        controller->CloseToJumpSegment = isAbountToJump;
+        newLocation = currentLocation + controller->m_MovementSpeed * DeltaTime * currentRotation;
     }
+    controller->GetPawn()->SetActorLocation(newLocation);
+    controller->CloseToJumpSegment = isAbountToJump;
 }
 
 /**
@@ -86,26 +89,8 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
     FVector pawnLocation(controller->GetPawn()->GetActorLocation());
     
     if (FNavMeshNodeFlags(segmentStart.Flags).IsNavLink()) {
-        
-        CalculateJumpDistance(segmentStart.Location, segmentEnd.Location);
-        if (FVector::Dist2D(pawnLocation, FVector(segmentEnd)) > 75) {
-            // Handle starting jump
-            controller->AtJumpSegment = true;
-            controller->Landing = false;
-        }
-        else if (controller->InAir) {
-            // Handle landing
-            controller->AtJumpSegment = false;
-            controller->Landing = true;
-        }
+        controller->Jump(segmentEnd);
     }
-    else {
-        // Handle normal segments
-        controller->AtJumpSegment = false;
-        controller->Landing = true;
-        controller->SetJumpDistance(1);
-    }
-    
     
     FColor color;
     if (controller->AtJumpSegment) {

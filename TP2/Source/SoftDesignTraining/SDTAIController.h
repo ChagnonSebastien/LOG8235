@@ -89,6 +89,8 @@ public:
 
     void SetJumpDistance(float factor);
 
+    void Jump(FVector landingPoint);
+
 protected:
     void OnMoveToTarget();
     void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit);
@@ -102,6 +104,8 @@ protected:
 
 private:
     TSharedPtr<float> FloorHeight = nullptr;
+    FVector LandingPoint;
+    FVector JumpingPoint;
 
     virtual void GoToBestTarget(float deltaTime) override;
     virtual void ChooseBehavior(float deltaTime) override;
