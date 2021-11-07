@@ -3,11 +3,15 @@
 #include "SDTCollectible.h"
 #include "SoftDesignTraining.h"
 
-ASDTCollectible::ASDTCollectible()
-{
+/**
+* Constructs an ASDTCollectible.
+*/
+ASDTCollectible::ASDTCollectible() { }
 
-}
-
+/**
+* A callback that is trigerred when this collectible is collected.
+* This is where this collectible starts its cooldown period.
+*/
 void ASDTCollectible::Collect()
 {
     GetWorld()->GetTimerManager().SetTimer(m_CollectCooldownTimer, this, &ASDTCollectible::OnCooldownDone, m_CollectCooldownDuration, false);
@@ -15,6 +19,10 @@ void ASDTCollectible::Collect()
     GetStaticMeshComponent()->SetVisibility(false);
 }
 
+/**
+* A callback that is trigerred when this colledtible's cooldown period is over.
+* This is where this collectible's respawn occurs.
+*/
 void ASDTCollectible::OnCooldownDone()
 {
     GetWorld()->GetTimerManager().ClearTimer(m_CollectCooldownTimer);
@@ -22,6 +30,11 @@ void ASDTCollectible::OnCooldownDone()
     GetStaticMeshComponent()->SetVisibility(true);
 }
 
+/**
+* Determines is this collectible is currently on cooldown.
+* 
+* @return `true` if this collectible is on cooldown, `false` otherwise.
+*/
 bool ASDTCollectible::IsOnCooldown()
 {
     return m_CollectCooldownTimer.IsValid();

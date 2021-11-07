@@ -7,7 +7,10 @@
 #include "SDTCollectible.generated.h"
 
 /**
- * 
+ * A collectible that the player can consume to gain a power-up, 
+ * and that AI agents can consume to deny them to the player. 
+ * When collected, the collectible becomes unavailable for the 
+ * remainder of its cooldown duration.
  */
 UCLASS()
 class SOFTDESIGNTRAINING_API ASDTCollectible : public AStaticMeshActor
