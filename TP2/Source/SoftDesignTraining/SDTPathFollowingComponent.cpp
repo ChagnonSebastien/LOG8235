@@ -71,14 +71,16 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
     FVector pawnLocation(controller->GetPawn()->GetActorLocation());
     
     if (FNavMeshNodeFlags(segmentStart.Flags).IsNavLink()) {
-        controller->AtJumpSegment = true;
+        
         CalculateJumpDistance(segmentStart.Location, segmentEnd.Location);
-        if (FVector::Dist(pawnLocation, FVector(segmentEnd)) > 130) {
+        if (FVector::Dist2D(pawnLocation, FVector(segmentEnd)) > 75) {
             // Handle starting jump
+            controller->AtJumpSegment = true;
             controller->Landing = false;
         }
         else if (controller->InAir) {
             // Handle landing
+            controller->AtJumpSegment = false;
             controller->Landing = true;
         }
     }

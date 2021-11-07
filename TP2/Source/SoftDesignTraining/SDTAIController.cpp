@@ -109,7 +109,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 
         if (FVector::DistXY(GetPawn()->GetActorLocation(), goal) < 75)
         {
-            m_MovementSpeed = 0.f;
+            //m_MovementSpeed = 0.f;
             playerFound = false;
         }
     }
