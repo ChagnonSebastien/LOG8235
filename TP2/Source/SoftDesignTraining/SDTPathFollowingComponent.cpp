@@ -8,11 +8,21 @@
 
 #include "DrawDebugHelpers.h"
 
+/**
+* Constructs an USDTPathFollowingComponent from an FObjectInitializer.
+*
+* @param ObjectInitializer The initializer to use to construct the USDTPathFollowingComponent.
+*/
 USDTPathFollowingComponent::USDTPathFollowingComponent(const FObjectInitializer& ObjectInitializer)
 {
 
 }
 
+/**
+* Updates the path following logic by applying a time tick.
+*
+* @param deltaTime The tick delta time.
+*/
 void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
 {
     const TArray<FNavPathPoint>& points = Path->GetPathPoints();
@@ -59,6 +69,11 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
     }
 }
 
+/**
+* Sets the current segment to move through.
+*
+* @param segmentStartIndex The segment start index.
+*/
 void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
 {
     Super::SetMoveSegment(segmentStartIndex);
@@ -102,13 +117,12 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
     DrawDebugSphere(GetWorld(), controller->GetPawn()->GetActorLocation() + FVector::UpVector * 120.0f, 10.0f, 32, color);
 }
 
-/*
-* Name: IsSegmentNavigationLink
-* Description:
-    Function that verify if a segment is a navigation link from the segment's index.
-* Args:
-    segmentStartIndex (int32) : index of the segment to check
-* Return: true if segmentIndex is a navigationLink, else false
+/**
+* Function that verify if a segment is a navigation link from the segment's index.
+*
+* @param segmentStartIndex The start index of the segment to check.
+* 
+* @return `true` if the segment is a navigation link, else `false`.
 */
 bool USDTPathFollowingComponent::IsSegmentNavigationLink(int32 segmentStartIndex)
 {
@@ -121,14 +135,11 @@ bool USDTPathFollowingComponent::IsSegmentNavigationLink(int32 segmentStartIndex
     return FNavMeshNodeFlags(segmentStart.Flags).IsNavLink();
 }
 
-/*
-* Name: CalculateJumpDistance
-* Description:
-    Function that calculate and set the z value of the pawn when he is InAir. 
-* Args:
-    startLocation (FVector) : Location of the starting point of the jump
-    endLocation (FVector) : Location of the ending point of the jump
-* Return: None
+/**
+* Function that calculate and set the z value of the pawn when he is InAir.
+*
+* @param startLocation Location of the starting point of the jump.
+* @param endLocation   Location of the ending point of the jump.
 */
 void USDTPathFollowingComponent::CalculateJumpDistance(FVector startLocation, FVector endLocation)
 {

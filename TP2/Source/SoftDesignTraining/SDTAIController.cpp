@@ -21,8 +21,6 @@
 * Constructs an ASDTAIController from an FObjectInitializer.
 *
 * @param ObjectInitializer The initializer to use to construct the ASDTAIController.
-*
-* @return The constructed ASDTAIController.
 */
 ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer.SetDefaultSubobjectClass<USDTPathFollowingComponent>(TEXT("PathFollowingComponent")))

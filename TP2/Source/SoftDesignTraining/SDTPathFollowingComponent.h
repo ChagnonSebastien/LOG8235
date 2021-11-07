@@ -9,7 +9,7 @@
 
 
 /**
-*
+* A component resposible for path following.
 */
 UCLASS(ClassGroup = AI, config = Game)
 class SOFTDESIGNTRAINING_API USDTPathFollowingComponent : public UPathFollowingComponent
