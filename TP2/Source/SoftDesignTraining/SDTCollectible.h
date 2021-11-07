@@ -23,6 +23,7 @@ public:
     void OnCooldownDone();
     bool IsOnCooldown();
 
+    /** The cooldown duration (in seconds) of this collectible. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float m_CollectCooldownDuration = 10.f;
 
