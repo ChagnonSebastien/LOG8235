@@ -17,11 +17,23 @@
 #include "EngineUtils.h"
 #include "SDTCollectible.h"
 
+/**
+* Constructs an ASDTAIController from an FObjectInitializer.
+*
+* @param ObjectInitializer The initializer to use to construct the ASDTAIController.
+*
+* @return The constructed ASDTAIController.
+*/
 ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer.SetDefaultSubobjectClass<USDTPathFollowingComponent>(TEXT("PathFollowingComponent")))
 {
 }
 
+/**
+* Updates agent speed and path to target.
+*
+* @param deltaTime The tick delta time.
+*/
 void ASDTAIController::GoToBestTarget(float deltaTime)
 {
     UpdateSpeed();
@@ -34,6 +46,9 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 
 }
 
+/**
+* Updates agent speed.
+*/
 void ASDTAIController::UpdateSpeed() {
     if (AtJumpSegment || CloseToJumpSegment)
     {
@@ -58,11 +73,20 @@ void ASDTAIController::UpdateSpeed() {
     }
 }
 
+/**
+* Callback that gets called when the agent starts moving towards its target.
+*/
 void ASDTAIController::OnMoveToTarget()
 {
     m_ReachedTarget = false;
 }
 
+/**
+* Callback that gets called when the agent has reached its target.
+*
+* @param RequestID The request identifier.
+* @param Result    The result from the path follower with metadata.
+*/
 void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
     Super::OnMoveCompleted(RequestID, Result);
@@ -70,6 +94,11 @@ void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollow
     m_ReachedTarget = true;
 }
 
+/**
+* Makes the agent choose its behavior.
+*
+* @param deltaTime The tick delta time.
+*/
 void ASDTAIController::ChooseBehavior(float deltaTime)
 {
     UpdatePlayerInteraction(deltaTime);
@@ -77,6 +106,11 @@ void ASDTAIController::ChooseBehavior(float deltaTime)
     ShowNavigationPath();
 }
 
+/**
+* Updates the agent's interaction with the player.
+*
+* @param deltaTime The tick delta time.
+*/
 void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 {
     //finish jump before updating AI state
@@ -134,11 +168,20 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
 }
 
+/**
+* Shows the agent's current navigation path.
+*/
 void ASDTAIController::ShowNavigationPath()
 {
     DisplayNavigationPath(m_pathToTarget, true);
 }
 
+/**
+* Shows a navigation path using draw debug spheres and lines.
+*
+* @param path   The path to show.
+* @param active If this path is the agent's current active path (vs other candidate paths).
+*/
 void ASDTAIController::DisplayNavigationPath(UNavigationPath* path, bool active)
 {
     // Shows current navigation path using DrawDebugLine and DrawDebugSphere
@@ -163,6 +206,12 @@ void ASDTAIController::DisplayNavigationPath(UNavigationPath* path, bool active)
     }
 }
 
+/**
+* Finds the nearest pickup's location by determining the path (on the navmesh) to each pickup
+* and selecting the shortest one.
+* 
+* @return The location of the nearest pickup.
+*/
 FVector ASDTAIController::FindNearestPickupLocation()
 {
     float shortestPathLength = 999999999999.9f;
@@ -196,15 +245,16 @@ FVector ASDTAIController::FindNearestPickupLocation()
     return shortestPathTargetLocation;
 }
 
-/*
-* Name: FindBestHidingLocation
-* Description:
-    Function that chooses which hiding spot is the best hiding spot 
-    for a given agent location and depending on the the player location.
-    The best hiding spot is the closest spot to the agent where the player 
-    is farther than the agent using the Euclidian distance as the heuristic.
-* Return: 
-    shortestPathTargetLocation (FVector) : Chosen best hiding spot location
+/**
+* Function that chooses which hiding spot is the best hiding spot 
+* for a given agent location and depending on the the player location.
+* The best hiding spot is the closest spot to the agent where the player 
+* is farther than the agent using the Euclidian distance as the heuristic.
+*
+* @param path   The path to show.
+* @param active If this path is the agent's current active path (vs other candidate paths).
+* 
+* @return Chosen best hiding spot location.
 */
 FVector ASDTAIController::FindBestHidingLocation()
 {
@@ -241,24 +291,25 @@ FVector ASDTAIController::FindBestHidingLocation()
     return shortestPathTargetLocation;
 }
 
+/**
+* Computes the path (on the navmesh) from the agent's location to a given target location.
+*
+* @param targetLocation The target location where the path should end.
+* 
+* @return The path (on the nasmesh) to the given target.
+*/
 UNavigationPath* ASDTAIController::ComputePathToTarget(FVector targetLocation) {
     UNavigationSystemV1* navigationSystem = UNavigationSystemV1::GetCurrent(GetWorld());
     FVector myLocation = GetPawn()->GetActorLocation();
     return navigationSystem->FindPathToLocationSynchronously(GetWorld(), myLocation, targetLocation);
 }
 
-/*
-* Name: findPlayer
-* Description:
-    Function that verify if a player is in the agent's detection sphere
-    without being behind a wall and return that position and player's
-    power up status if a player is found.
-* Args:
-    hit (FHitResult) : A collision hit result
-    playerFound (bool&) : True if a player is found, else false
-    isPlayerPowerUp (bool&) : True if a player is powered up, else false
-    playerLocation (FVector&) : player's location if player is found, else null
-* Return: None
+/**
+* Function that verify if a player is in the agent's detection sphere
+* without being behind a wall and return that position and player's
+* power up status if a player is found.
+*
+* @param hit A collision hit result.
 */
 void ASDTAIController::findPlayer(FHitResult hit) {
     struct FHitResult hitResult;
@@ -282,6 +333,12 @@ void ASDTAIController::findPlayer(FHitResult hit) {
     }
 }
 
+/**
+* Determines the raycast detection hit with highest priority.
+*
+* @param[in]  hits            The hits from the raycast.
+* @param[out] outDetectionHit The detection hit with highest priority.
+*/
 void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit)
 {
     for (const FHitResult& hit : hits)
@@ -307,6 +364,9 @@ void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>&
     }
 }
 
+/**
+* Sets the agent's state to interrupted.
+*/
 void ASDTAIController::AIStateInterrupted()
 {
     StopMovement();
@@ -316,6 +376,11 @@ void ASDTAIController::AIStateInterrupted()
     m_MovementSpeed = 0;
 }
 
+/**
+* Sets the agent's jump distance from the given factor.
+*
+* @param factor The factor that is passed to the jump curve.
+*/
 void ASDTAIController::SetJumpDistance(float factor) {
 
     USkeletalMeshComponent* skeleton = (USkeletalMeshComponent*)GetPawn()->GetComponentByClass(USkeletalMeshComponent::StaticClass());
@@ -328,11 +393,17 @@ void ASDTAIController::SetJumpDistance(float factor) {
     }
 }
 
+/**
+* Updates the agent's internal state to be in air (jump started).
+*/
 void ASDTAIController::FinishedJumpingInitialization()
 {
     InAir = true;
 }
 
+/**
+* Updates the agent's internal state to be gounded (jump ended).
+*/
 void ASDTAIController::FinishedLanding()
 {
     InAir = false;
