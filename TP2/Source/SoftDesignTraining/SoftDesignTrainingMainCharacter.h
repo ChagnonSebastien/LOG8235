@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "SoftDesignTrainingCharacter.h"
 #include "SoftDesignTrainingMainCharacter.generated.h"
-
+#define COLLISION_DEATH_OBJECT		ECollisionChannel::ECC_GameTraceChannel3
 /**
  * 
  */

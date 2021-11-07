@@ -193,6 +193,16 @@ FVector ASDTAIController::FindNearestPickupLocation()
     return shortestPathTargetLocation;
 }
 
+/*
+* Name: FindBestHidingLocation
+* Description:
+    Function that chooses which hiding spot is the best hiding spot 
+    for a given agent location and depending on the the player location.
+    The best hiding spot is the closest spot to the agent where the player 
+    is farther than the agent using the Euclidian distance as the heuristic.
+* Return: 
+    shortestPathTargetLocation (FVector) : Chosen best hiding spot location
+*/
 FVector ASDTAIController::FindBestHidingLocation()
 {
     float shortestPathLength = 999999999999.9f;
@@ -209,7 +219,7 @@ FVector ASDTAIController::FindBestHidingLocation()
         FVector hidingLocation = hidingPlace->GetActorLocation();
         UNavigationPath* pathToHiding = ComputePathToTarget(hidingLocation);
 
-        // If the path's length is the shortest we have seen yet and the agent has a smaller euclidian distance to the spot than the player, we save it
+        
         float pathToHidingLength = pathToHiding->GetPathLength();
         float playerDistanceToSpot = FVector::DistXY(playerLocation, hidingPlace->GetActorLocation());
         FVector agentLocation = GetPawn()->GetActorLocation();
@@ -217,6 +227,7 @@ FVector ASDTAIController::FindBestHidingLocation()
 
         bool playerTooClose = playerDistanceToSpot < agentDistanceToSpot;
 
+        // If the path's length is the shortest we have seen yet and the agent has a smaller Euclidian distance to the spot than the player, we save it
         if ((pathToHidingLength < shortestPathLength) && !playerTooClose) {
             shortestPathLength = pathToHidingLength;
             shortestPathTargetLocation = hidingLocation;
