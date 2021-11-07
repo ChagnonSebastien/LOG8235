@@ -5,10 +5,13 @@
 
 #include "SDTUtils.h"
 
+/**
+* Constructs an USDTNavArea_Jump from an FObjectInitializer.
+*
+* @param ObjectInitializer The initializer to use to construct the USDTNavArea_Jump.
+*/
 USDTNavArea_Jump::USDTNavArea_Jump(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
     SDTUtils::SetNavTypeFlag(AreaFlags, SDTUtils::Jump);
 }
-
-
