@@ -1,5 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
+/*
+ Authors:
+   - Sébastien Chagnon (1804702)
+   - Andy Lam (1960209)
+   - Jason Thai (1956172)
+   - Alexandre Ramtoula (1959456)
+   - Philippe Trempe (1686069)
+*/
 #pragma once
 
 #include "CoreMinimal.h"
@@ -20,7 +27,4 @@ public:
     virtual void FollowPathSegment(float deltaTime) override;
     virtual void SetMoveSegment(int32 segmentStartIndex) override;
 
-private:
-    bool IsSegmentNavigationLink(int32 segmentStartIndex);
-    void CalculateJumpDistance(FVector startLocation, FVector endLocation);
 };

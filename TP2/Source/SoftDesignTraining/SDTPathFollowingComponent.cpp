@@ -1,5 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
+/*
+ Authors:
+   - Sébastien Chagnon (1804702)
+   - Andy Lam (1960209)
+   - Jason Thai (1956172)
+   - Alexandre Ramtoula (1959456)
+   - Philippe Trempe (1686069)
+*/
 #include "SDTPathFollowingComponent.h"
 #include "SoftDesignTraining.h"
 #include "SDTUtils.h"
@@ -59,8 +66,8 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
     bool isVeryCloseToNextSegment = controller->m_MovementSpeed * DeltaTime * 10 > closestDistance;
     FVector currentRotation = controller->GetPawn()->GetActorRotation().Vector();
     bool isFacingGoal = FVector2D::DotProduct(FVector2D(orientation), FVector2D(ClosestJumpSegment - currentLocation)) > 0;
-    bool isAbountToJump = isCloseToNextSegment && isFacingGoal;
-    if (isAbountToJump)
+    bool isAboutToJump = isCloseToNextSegment && isFacingGoal;
+    if (isAboutToJump)
     {
         newLocation = currentLocation + controller->m_MovementSpeed * DeltaTime * orientation;
     }
@@ -69,7 +76,7 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
         newLocation = currentLocation + controller->m_MovementSpeed * DeltaTime * currentRotation;
     }
     controller->GetPawn()->SetActorLocation(newLocation);
-    controller->CloseToJumpSegment = isAbountToJump;
+    controller->CloseToJumpSegment = isAboutToJump;
 }
 
 /**
@@ -100,38 +107,4 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
         color = FColor(0, 0, 255);
     }
     DrawDebugSphere(GetWorld(), controller->GetPawn()->GetActorLocation() + FVector::UpVector * 120.0f, 10.0f, 32, color);
-}
-
-/**
-* Function that verify if a segment is a navigation link from the segment's index.
-*
-* @param segmentStartIndex The start index of the segment to check.
-* 
-* @return `true` if the segment is a navigation link, else `false`.
-*/
-bool USDTPathFollowingComponent::IsSegmentNavigationLink(int32 segmentStartIndex)
-{
-    const TArray<FNavPathPoint>& points = Path->GetPathPoints();
-    if (segmentStartIndex + 1 >= points.Num())
-    {
-        return false;
-    }
-    const FNavPathPoint& segmentStart = points[segmentStartIndex];
-    return FNavMeshNodeFlags(segmentStart.Flags).IsNavLink();
-}
-
-/**
-* Function that calculate and set the z value of the pawn when he is InAir.
-*
-* @param startLocation Location of the starting point of the jump.
-* @param endLocation   Location of the ending point of the jump.
-*/
-void USDTPathFollowingComponent::CalculateJumpDistance(FVector startLocation, FVector endLocation)
-{
-    ASDTAIController* controller = Cast<ASDTAIController>(GetOwner());
-    FVector pawnLocation(controller->GetPawn()->GetActorLocation());
-
-    float totalDistance = FVector::Dist2D(startLocation, endLocation);
-    float currentDistance = FVector::Dist2D(startLocation, pawnLocation);
-    controller->SetJumpDistance(currentDistance / totalDistance);
 }
