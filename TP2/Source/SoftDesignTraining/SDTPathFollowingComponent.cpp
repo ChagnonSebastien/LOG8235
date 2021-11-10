@@ -62,12 +62,16 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
     bool isAbountToJump = isCloseToNextSegment && isFacingGoal;
     if (isAbountToJump)
     {
+        // Dump movement straight to the objective if agent is about to jump
         newLocation = currentLocation + controller->m_MovementSpeed * DeltaTime * orientation;
     }
     else
     {
+        // Fancy curved movement otherwise
         newLocation = currentLocation + controller->m_MovementSpeed * DeltaTime * currentRotation;
     }
+
+    // Apply movement
     controller->GetPawn()->SetActorLocation(newLocation);
     controller->CloseToJumpSegment = isAbountToJump;
 }
@@ -88,10 +92,12 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
     ASDTAIController* controller = Cast<ASDTAIController>(GetOwner());
     FVector pawnLocation(controller->GetPawn()->GetActorLocation());
     
+    // Jump if controller is on jump segment
     if (FNavMeshNodeFlags(segmentStart.Flags).IsNavLink()) {
         controller->Jump(segmentEnd);
     }
-    
+
+    // Above-head indicator update
     FColor color;
     if (controller->AtJumpSegment) {
         color = FColor(0, 255, 0);

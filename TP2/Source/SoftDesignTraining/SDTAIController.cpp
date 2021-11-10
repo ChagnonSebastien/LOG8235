@@ -10,7 +10,6 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
-//#include "UnrealMathUtility.h"
 #include <cmath>  // For fleeing decision
 
 #include "SDTUtils.h"
@@ -51,6 +50,7 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
             bool isTargetPositionNavigable = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem())->ProjectPointToNavigation(currentLocation, navLocation);
             if (m_MovementSpeed * deltaTime > FVector2D(orientation).Size() && isTargetPositionNavigable)
             {
+                // End the jump if close enough
                 m_pathToTarget = nullptr;
                 AtJumpSegment = false;
                 GetPawn()->SetActorLocation(FVector(LandingPoint.X, LandingPoint.Y, currentLocation.Z));
@@ -73,10 +73,13 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 
         float totalDistance = FVector2D::Distance(FVector2D(JumpingPoint), FVector2D(LandingPoint));
         float currentDistance = FVector2D::Distance(FVector2D(JumpingPoint), FVector2D(currentLocation));
+
+        // Update jump height
         SetJumpDistance(currentDistance / totalDistance);
 
     }
     else if (m_pathToTarget != NULL) {
+        // Normal move
         GetPathFollowingComponent()->RequestMove(FAIMoveRequest(), m_pathToTarget->GetPath());
     }
     
@@ -89,23 +92,28 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 void ASDTAIController::UpdateSpeed() {
     if (AtJumpSegment || CloseToJumpSegment)
     {
+        // Jump-related speed
         m_NewSpeed = m_RunningSpeed * JumpSpeed;
     }
     else if (fleeing || playerFound)
     {
+        // Player-related speed
         m_NewSpeed = m_RunningSpeed;
     }
     else
     {
+        // Default speed
         m_NewSpeed = m_WalkingSpeed;
     }
 
     if (m_NewSpeed < m_MovementSpeed)
     {
+        // Decrease speed
         m_MovementSpeed -= 20.f;
     }
     else if (m_NewSpeed > m_MovementSpeed)
     {
+        // Increase speed
         m_MovementSpeed += 10.f;
     }
 }
@@ -397,6 +405,7 @@ void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>&
             }
             else if (component->GetCollisionObjectType() == COLLISION_COLLECTIBLE)
             {
+                // Target the visible collectible
                 outDetectionHit = hit;
             }
         }
@@ -404,7 +413,7 @@ void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>&
 }
 
 /**
-* Sets the agent's state to interrupted.
+* Sets the agent's state when it is respawned
 */
 void ASDTAIController::AIStateInterrupted()
 {
@@ -421,7 +430,7 @@ void ASDTAIController::AIStateInterrupted()
 }
 
 /**
-* Sets the agent's jump distance from the given factor.
+* Sets the agent's jump height from the given distance factor on its total jump.
 *
 * @param factor The factor that is passed to the jump curve.
 */
@@ -431,12 +440,16 @@ void ASDTAIController::SetJumpDistance(float factor) {
     if (skeleton) {
         if (!FloorHeight.IsValid())
         {
+            // Sets the initial Floor height on game start
             FloorHeight = MakeShared<float>(skeleton->GetRelativeLocation().Z);
         }
         skeleton->SetRelativeLocation(FVector(0, 0, *FloorHeight.Get() + JumpCurve->GetFloatValue(factor) * JumpApexHeight));
     }
 }
 
+/** 
+* Start the jumping process from the player's current position to an objective
+*/
 void ASDTAIController::Jump(FVector landingPoint)
 {
     AtJumpSegment = true;
