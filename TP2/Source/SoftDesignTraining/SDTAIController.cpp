@@ -413,6 +413,7 @@ void ASDTAIController::AIStateInterrupted()
     isPlayerPowerUp = false;
     playerFound = false;
     m_MovementSpeed = 0;
+    m_pathToTarget = nullptr;
     AtJumpSegment = false;
     Landing = true;
     CloseToJumpSegment = false;
