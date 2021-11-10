@@ -205,7 +205,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     // Update path to target
     m_pathToTarget = ComputePathToTarget(goal);
     
-    DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
+    DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
 }
 
 /**
@@ -414,6 +414,10 @@ void ASDTAIController::AIStateInterrupted()
     isPlayerPowerUp = false;
     playerFound = false;
     m_MovementSpeed = 0;
+    AtJumpSegment = false;
+    Landing = true;
+    CloseToJumpSegment = false;
+    SetJumpDistance(1);
 }
 
 /**
