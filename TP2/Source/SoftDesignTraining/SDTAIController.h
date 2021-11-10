@@ -1,5 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
+/*
+ Authors:
+   - Sébastien Chagnon (1804702)
+   - Andy Lam (1960209)
+   - Jason Thai (1956172)
+   - Alexandre Ramtoula (1959456)
+   - Philippe Trempe (1686069)
+*/
 #pragma once
 
 #include "CoreMinimal.h"
