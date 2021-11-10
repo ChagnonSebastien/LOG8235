@@ -45,7 +45,6 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 
     // Update path follower with new path
     if (AtJumpSegment) {
-        GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Yellow, TEXT("AtJumpSegment"));
         FVector currentLocation = GetPawn()->GetActorLocation();
         FVector2D orientation = FVector2D(LandingPoint) - FVector2D(currentLocation);
 
