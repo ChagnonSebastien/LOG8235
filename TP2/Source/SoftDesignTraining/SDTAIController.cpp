@@ -40,7 +40,7 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     if (AtJumpSegment) {
         GEngine->AddOnScreenDebugMessage(-1, deltaTime, FColor::Yellow, TEXT("AtJumpSegment"));
         FVector currentLocation = GetPawn()->GetActorLocation();
-        FVector orientation = LandingPoint - currentLocation;
+        FVector2D orientation = FVector2D(LandingPoint) - FVector2D(currentLocation);
 
         // Check if we should initiate the landing sequence
         if (FVector2D(orientation).Size() < 75)
@@ -50,7 +50,7 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
             // Check if the goal position can be projected onto the NavMesh
             FNavLocation navLocation;
             bool isTargetPositionNavigable = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem())->ProjectPointToNavigation(currentLocation, navLocation);
-            if (isTargetPositionNavigable)
+            if (m_MovementSpeed * deltaTime > FVector2D(orientation).Size() && isTargetPositionNavigable)
             {
                 m_pathToTarget = nullptr;
                 AtJumpSegment = false;
@@ -62,13 +62,14 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
         }
 
         orientation.Normalize();
-
+        FVector orientation3D = FVector(orientation.X, orientation.Y, 0);
+        
         // Smoothly update AI agent rotation based on orientation
-        FQuat rotation = FRotationMatrix::MakeFromXZ(orientation, FVector::UpVector).ToQuat();
-        GetPawn()->SetActorRotation(FMath::Lerp(GetPawn()->GetActorRotation(), orientation.Rotation(), 0.05f));
+        FQuat rotation = FRotationMatrix::MakeFromXZ(orientation3D, FVector::UpVector).ToQuat();
+        GetPawn()->SetActorRotation(FMath::Lerp(GetPawn()->GetActorRotation(), orientation3D.Rotation(), 0.05f));
 
         // Update AI agent location based on orientation and movement speed
-        FVector newLocation = currentLocation + m_MovementSpeed * deltaTime * orientation;
+        FVector newLocation = currentLocation + m_MovementSpeed * deltaTime * orientation3D;
         GetPawn()->SetActorLocation(newLocation);
 
         float totalDistance = FVector2D::Distance(FVector2D(JumpingPoint), FVector2D(LandingPoint));
