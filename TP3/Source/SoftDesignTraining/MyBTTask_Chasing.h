@@ -10,6 +10,7 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
 //#include "UnrealMathUtility.h"
+#include "BehaviorTree/Blackboard/BlackboardKeyType_Bool.h"
 #include "SDTUtils.h"
 #include "EngineUtils.h"
 #include "CoreMinimal.h"

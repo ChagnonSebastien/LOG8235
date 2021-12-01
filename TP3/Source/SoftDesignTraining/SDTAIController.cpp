@@ -7,7 +7,9 @@
 #include "SDTPathFollowingComponent.h"
 #include "DrawDebugHelpers.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Bool.h"
+#include "BehaviorTree/Blackboard/BlackboardKeyType_Object.h"
 #include "SoftDesignTrainingCharacter.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 //#include "UnrealMathUtility.h"
 #include "SDTUtils.h"
@@ -33,6 +35,42 @@ void ASDTAIController::StartBehaviorTree(APawn* pawn)
     }
 }
 
+
+void ASDTAIController::StopBehaviorTree(APawn* pawn)
+{
+    if (ASoftDesignTrainingCharacter* aiBaseCharacter = Cast<ASoftDesignTrainingCharacter>(pawn))
+    {
+        if (aiBaseCharacter->GetBehaviorTree())
+        {
+            m_behaviorTreeComponent->StopTree();
+        }
+    }
+}
+
+void ASDTAIController::OnPossess(APawn* pawn)
+{
+    Super::OnPossess(pawn);
+
+    if (ASoftDesignTrainingCharacter* aiBaseCharacter = Cast<ASoftDesignTrainingCharacter>(pawn))
+    {
+        if (aiBaseCharacter->GetBehaviorTree())
+        {
+            m_blackboardComponent->InitializeBlackboard(*aiBaseCharacter->GetBehaviorTree()->BlackboardAsset);
+
+            m_isTargetPowerUpKeyID = m_blackboardComponent->GetKeyID("isPlayerPoweredUp");
+            m_isTargetSeenKeyID = m_blackboardComponent->GetKeyID("isPlayerSeen");
+            m_targetPosBBKeyID = m_blackboardComponent->GetKeyID("EnemyActor");
+            //Set this agent in the BT
+            m_blackboardComponent->SetValue<UBlackboardKeyType_Object>(m_blackboardComponent->GetKeyID("SelfActor"), pawn);
+        }
+    }
+}
+
+
+
+
+
+/// ANCIEN CODE BELOW
 
 
 void ASDTAIController::GoToBestTarget(float deltaTime)

@@ -72,8 +72,13 @@ public:
     void SetActorLocation(const FVector& targetLocation);
     void AIStateInterrupted();
     void StartBehaviorTree(APawn* pawn);
+    void StopBehaviorTree(APawn* pawn);
     UBlackboardComponent* GetBlackBoardComponent() const { return m_blackboardComponent; }
-
+    uint8 GetTargetPowerUpKeyID() const { return m_isTargetPowerUpKeyID; }
+    uint8 GetTargetSeenKeyID() const { return m_isTargetSeenKeyID; }
+    uint8 GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
+protected:
+    virtual void OnPossess(APawn* pawn) override;
 private:
     virtual void GoToBestTarget(float deltaTime) override;
     virtual void UpdatePlayerInteraction(float deltaTime) override;
@@ -91,4 +96,7 @@ protected:
         UBehaviorTreeComponent* m_behaviorTreeComponent;
     UPROPERTY(transient)
         UBlackboardComponent* m_blackboardComponent;
+    uint8 m_isTargetPowerUpKeyID;
+    uint8 m_isTargetSeenKeyID;
+    uint8 m_targetPosBBKeyID;
 };
