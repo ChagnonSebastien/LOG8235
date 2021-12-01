@@ -6,6 +6,8 @@
 #include "SDTFleeLocation.h"
 #include "SDTPathFollowingComponent.h"
 #include "DrawDebugHelpers.h"
+#include "BehaviorTree/Blackboard/BlackboardKeyType_Bool.h"
+#include "SoftDesignTrainingCharacter.h"
 #include "Kismet/KismetMathLibrary.h"
 //#include "UnrealMathUtility.h"
 #include "SDTUtils.h"
@@ -15,7 +17,23 @@ ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer.SetDefaultSubobjectClass<USDTPathFollowingComponent>(TEXT("PathFollowingComponent")))
 {
     m_PlayerInteractionBehavior = PlayerInteractionBehavior_Collect;
+    m_behaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorTreeComponent"));
+    m_blackboardComponent = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackBoardComponent"));
 }
+
+void ASDTAIController::StartBehaviorTree(APawn* pawn)
+{
+    if (ASoftDesignTrainingCharacter* aiBaseCharacter = Cast<ASoftDesignTrainingCharacter>(pawn))
+    {
+        
+        if (aiBaseCharacter->GetBehaviorTree())
+        {
+            m_behaviorTreeComponent->StartTree(*aiBaseCharacter->GetBehaviorTree());
+        }
+    }
+}
+
+
 
 void ASDTAIController::GoToBestTarget(float deltaTime)
 {
@@ -203,7 +221,6 @@ void ASDTAIController::SetActorLocation(const FVector& targetLocation)
 void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
     Super::OnMoveCompleted(RequestID, Result);
-
     m_ReachedTarget = true;
 }
 

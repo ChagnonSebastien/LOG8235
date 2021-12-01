@@ -44,6 +44,8 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
     bool Landing = false;
 
+    
+
 protected:
 
     enum PlayerInteractionBehavior
@@ -69,6 +71,8 @@ public:
     void RotateTowards(const FVector& targetLocation);
     void SetActorLocation(const FVector& targetLocation);
     void AIStateInterrupted();
+    void StartBehaviorTree(APawn* pawn);
+    UBlackboardComponent* GetBlackBoardComponent() const { return m_blackboardComponent; }
 
 private:
     virtual void GoToBestTarget(float deltaTime) override;
@@ -81,4 +85,10 @@ protected:
     FRotator m_ObstacleAvoidanceRotation;
     FTimerHandle m_PlayerInteractionNoLosTimer;
     PlayerInteractionBehavior m_PlayerInteractionBehavior;
+
+    //
+    UPROPERTY(transient)
+        UBehaviorTreeComponent* m_behaviorTreeComponent;
+    UPROPERTY(transient)
+        UBlackboardComponent* m_blackboardComponent;
 };
