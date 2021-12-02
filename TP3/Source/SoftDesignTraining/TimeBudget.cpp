@@ -16,7 +16,6 @@ ATimeBudget::ATimeBudget()
 void ATimeBudget::BeginPlay()
 {
 	Super::BeginPlay();
-	SoftDesignTrainingModuleImpl::WorldBeginPlay();
 }
 
 // Called every frame
