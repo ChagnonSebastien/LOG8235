@@ -9,6 +9,10 @@
 #include "SDTFleeLocation.h"
 #include "SDTPathFollowingComponent.h"
 #include "DrawDebugHelpers.h"
+#include "BehaviorTree/Blackboard/BlackboardKeyType_Bool.h"
+#include "BehaviorTree/Blackboard/BlackboardKeyType_Object.h"
+#include "SoftDesignTrainingCharacter.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 //#include "UnrealMathUtility.h"
 #include "SDTUtils.h"
@@ -18,7 +22,76 @@ ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer.SetDefaultSubobjectClass<USDTPathFollowingComponent>(TEXT("PathFollowingComponent")))
 {
     m_PlayerInteractionBehavior = PlayerInteractionBehavior_Collect;
+    m_behaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorTreeComponent"));
+    m_blackboardComponent = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackBoardComponent"));
+    m_targetLkpInfo = TargetLKPInfo();
 }
+
+void ASDTAIController::StartBehaviorTree(APawn* pawn)
+{
+    if (ASoftDesignTrainingCharacter* aiBaseCharacter = Cast<ASoftDesignTrainingCharacter>(pawn))
+    {
+        
+        if (aiBaseCharacter->GetBehaviorTree())
+        {
+            m_behaviorTreeComponent->StartTree(*aiBaseCharacter->GetBehaviorTree());
+        }
+    }
+}
+
+
+void ASDTAIController::StopBehaviorTree(APawn* pawn)
+{
+    if (ASoftDesignTrainingCharacter* aiBaseCharacter = Cast<ASoftDesignTrainingCharacter>(pawn))
+    {
+        if (aiBaseCharacter->GetBehaviorTree())
+        {
+            m_behaviorTreeComponent->StopTree();
+        }
+    }
+}
+
+void ASDTAIController::OnPossess(APawn* pawn)
+{
+    Super::OnPossess(pawn);
+
+    if (ASoftDesignTrainingCharacter* aiBaseCharacter = Cast<ASoftDesignTrainingCharacter>(pawn))
+    {
+        if (aiBaseCharacter->GetBehaviorTree())
+        {
+            m_blackboardComponent->InitializeBlackboard(*aiBaseCharacter->GetBehaviorTree()->BlackboardAsset);
+
+            m_isTargetPowerUpKeyID = m_blackboardComponent->GetKeyID("isPlayerPoweredUp");
+            m_isTargetSeenKeyID = m_blackboardComponent->GetKeyID("isPlayerSeen");
+            m_targetPosBBKeyID = m_blackboardComponent->GetKeyID("EnemyActor");
+            m_targetFleeLocationBBKeyID = m_blackboardComponent->GetKeyID("FleeingLocation");
+            //Set this agent in the BT
+            m_blackboardComponent->SetValue<UBlackboardKeyType_Object>(m_blackboardComponent->GetKeyID("SelfActor"), pawn);
+        }
+    }
+}
+
+void ASDTAIController::MoveToAssignedPos()
+{
+    AiAgentGroupManager* aiAgentGroupManager = AiAgentGroupManager::GetInstance();
+    FVector assignedPos;
+    if (aiAgentGroupManager)
+    {
+        assignedPos = aiAgentGroupManager->GetAssignedPos(GetWorld(), this);
+    }
+    else
+    {
+        return;
+    }
+
+    MoveToLocation(assignedPos, 0.5f, false, true, true, NULL, false);
+    OnMoveToTarget();
+}
+
+
+
+/// ANCIEN CODE BELOW
+
 
 void ASDTAIController::GoToBestTarget(float deltaTime)
 {
@@ -207,7 +280,6 @@ void ASDTAIController::SetActorLocation(const FVector& targetLocation)
 void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
     Super::OnMoveCompleted(RequestID, Result);
-
     m_ReachedTarget = true;
 }
 
