@@ -1,5 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include <iomanip>
+#include <sstream>
+
 #include "SDTAIController.h"
 #include "SoftDesignTraining.h"
 #include "SDTCollectible.h"
@@ -22,23 +25,24 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     switch (m_PlayerInteractionBehavior)
     {
     case PlayerInteractionBehavior_Collect:
-
+        m_profiler.startProfilingScope("COLLECT");
         MoveToRandomCollectible();
-
+        m_profiler.stopProfilingScope("COLLECT");
         break;
 
     case PlayerInteractionBehavior_Chase:
-
         MoveToPlayer();
-
         break;
 
     case PlayerInteractionBehavior_Flee:
-
+        m_profiler.startProfilingScope("FLEE");
         MoveToBestFleeLocation();
-
+        m_profiler.stopProfilingScope("FLEE");
         break;
     }
+
+    m_profiler.stopProfilingScope("UPDATE");
+    DisplayProfilerTimes();
 }
 
 void ASDTAIController::MoveToRandomCollectible()
@@ -227,10 +231,16 @@ void ASDTAIController::ShowNavigationPath()
             }
         }
     }
+
+    m_profiler.stopProfilingScope("UPDATE");
+    DisplayProfilerTimes();
 }
 
 void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 {
+    m_profiler.reset();
+    m_profiler.startProfilingScope("UPDATE");
+
     //finish jump before updating AI state
     if (AtJumpSegment)
         return;
@@ -243,6 +253,8 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     if (!playerCharacter)
         return;
 
+    m_profiler.startProfilingScope("DETECT");
+
     FVector detectionStartLocation = selfPawn->GetActorLocation() + selfPawn->GetActorForwardVector() * m_DetectionCapsuleForwardStartingOffset;
     FVector detectionEndLocation = detectionStartLocation + selfPawn->GetActorForwardVector() * m_DetectionCapsuleHalfLength * 2;
 
@@ -254,6 +266,8 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 
     FHitResult detectionHit;
     GetHightestPriorityDetectionHit(allDetectionHits, detectionHit);
+    
+    m_profiler.stopProfilingScope("DETECT");
 
     UpdatePlayerInteractionBehavior(detectionHit, deltaTime);
 
@@ -280,6 +294,20 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), FColor::Orange, 0.f, false);
 
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
+}
+
+/// <summary>
+/// Displays elapsed time for profiled scopes above the agent.
+/// </summary>
+void ASDTAIController::DisplayProfilerTimes() {
+    auto numScopes = m_profiler.scopes.size();
+    for (int i = 0; i < numScopes; ++i) {
+        std::string scope = m_profiler.scopes[i];
+        std::stringstream stream;
+        stream << scope << ": " << std::fixed << std::setprecision(3) << m_profiler.getScopeElapsedSeconds(scope) * 1000 << " ms";
+        std::string text = stream.str();
+        DrawDebugString(GetWorld(), FVector(0.0f, 0.0f, 100.0f * (numScopes - i)), text.c_str(), GetPawn(), FColor::White, 0.0f, false);
+    }
 }
 
 bool ASDTAIController::HasLoSOnHit(const FHitResult& hit)
