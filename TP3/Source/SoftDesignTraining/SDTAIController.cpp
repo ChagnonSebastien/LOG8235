@@ -1,11 +1,19 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include <iomanip>
+#include <sstream>
+
 #include "SDTAIController.h"
 #include "SoftDesignTraining.h"
 #include "SDTCollectible.h"
 #include "SDTFleeLocation.h"
 #include "SDTPathFollowingComponent.h"
 #include "DrawDebugHelpers.h"
+#include "BehaviorTree/Blackboard/BlackboardKeyType_Bool.h"
+#include "BehaviorTree/Blackboard/BlackboardKeyType_Object.h"
+#include "SoftDesignTrainingCharacter.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "AiAgentGroupManager.h"
 #include "Kismet/KismetMathLibrary.h"
 //#include "UnrealMathUtility.h"
 #include "SDTUtils.h"
@@ -15,30 +23,100 @@ ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer.SetDefaultSubobjectClass<USDTPathFollowingComponent>(TEXT("PathFollowingComponent")))
 {
     m_PlayerInteractionBehavior = PlayerInteractionBehavior_Collect;
+    m_behaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorTreeComponent"));
+    m_blackboardComponent = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackBoardComponent"));
+    m_targetLkpInfo = TargetLKPInfo();
 }
+
+void ASDTAIController::StartBehaviorTree(APawn* pawn)
+{
+    if (ASoftDesignTrainingCharacter* aiBaseCharacter = Cast<ASoftDesignTrainingCharacter>(pawn))
+    {
+        
+        if (aiBaseCharacter->GetBehaviorTree())
+        {
+            m_behaviorTreeComponent->StartTree(*aiBaseCharacter->GetBehaviorTree());
+        }
+    }
+}
+
+
+void ASDTAIController::StopBehaviorTree(APawn* pawn)
+{
+    if (ASoftDesignTrainingCharacter* aiBaseCharacter = Cast<ASoftDesignTrainingCharacter>(pawn))
+    {
+        if (aiBaseCharacter->GetBehaviorTree())
+        {
+            m_behaviorTreeComponent->StopTree();
+        }
+    }
+}
+
+void ASDTAIController::OnPossess(APawn* pawn)
+{
+    Super::OnPossess(pawn);
+
+    if (ASoftDesignTrainingCharacter* aiBaseCharacter = Cast<ASoftDesignTrainingCharacter>(pawn))
+    {
+        if (aiBaseCharacter->GetBehaviorTree())
+        {
+            m_blackboardComponent->InitializeBlackboard(*aiBaseCharacter->GetBehaviorTree()->BlackboardAsset);
+
+            m_isTargetPowerUpKeyID = m_blackboardComponent->GetKeyID("isPlayerPoweredUp");
+            m_isTargetSeenKeyID = m_blackboardComponent->GetKeyID("isPlayerSeen");
+            m_targetPosBBKeyID = m_blackboardComponent->GetKeyID("EnemyActor");
+            m_targetFleeLocationBBKeyID = m_blackboardComponent->GetKeyID("FleeingLocation");
+            //Set this agent in the BT
+            m_blackboardComponent->SetValue<UBlackboardKeyType_Object>(m_blackboardComponent->GetKeyID("SelfActor"), pawn);
+        }
+    }
+}
+
+void ASDTAIController::MoveToAssignedPos()
+{
+    AiAgentGroupManager* aiAgentGroupManager = AiAgentGroupManager::GetInstance();
+    FVector assignedPos;
+    if (aiAgentGroupManager)
+    {
+        assignedPos = aiAgentGroupManager->GetAssignedPos(GetWorld(), this);
+    }
+    else
+    {
+        return;
+    }
+
+    MoveToLocation(assignedPos, 0.5f, false, true, true, NULL, false);
+    OnMoveToTarget();
+}
+
+
+
+/// ANCIEN CODE BELOW
+
 
 void ASDTAIController::GoToBestTarget(float deltaTime)
 {
     switch (m_PlayerInteractionBehavior)
     {
     case PlayerInteractionBehavior_Collect:
-
+        m_profiler.startProfilingScope("COLLECT");
         MoveToRandomCollectible();
-
+        m_profiler.stopProfilingScope("COLLECT");
         break;
 
     case PlayerInteractionBehavior_Chase:
-
         MoveToPlayer();
-
         break;
 
     case PlayerInteractionBehavior_Flee:
-
+        m_profiler.startProfilingScope("FLEE");
         MoveToBestFleeLocation();
-
+        m_profiler.stopProfilingScope("FLEE");
         break;
     }
+
+    m_profiler.stopProfilingScope("UPDATE");
+    DisplayProfilerTimes();
 }
 
 void ASDTAIController::MoveToRandomCollectible()
@@ -203,7 +281,6 @@ void ASDTAIController::SetActorLocation(const FVector& targetLocation)
 void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
     Super::OnMoveCompleted(RequestID, Result);
-
     m_ReachedTarget = true;
 }
 
@@ -227,10 +304,16 @@ void ASDTAIController::ShowNavigationPath()
             }
         }
     }
+
+    m_profiler.stopProfilingScope("UPDATE");
+    DisplayProfilerTimes();
 }
 
 void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 {
+    m_profiler.reset();
+    m_profiler.startProfilingScope("UPDATE");
+
     //finish jump before updating AI state
     if (AtJumpSegment)
         return;
@@ -243,6 +326,8 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     if (!playerCharacter)
         return;
 
+    m_profiler.startProfilingScope("DETECT");
+
     FVector detectionStartLocation = selfPawn->GetActorLocation() + selfPawn->GetActorForwardVector() * m_DetectionCapsuleForwardStartingOffset;
     FVector detectionEndLocation = detectionStartLocation + selfPawn->GetActorForwardVector() * m_DetectionCapsuleHalfLength * 2;
 
@@ -254,6 +339,8 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 
     FHitResult detectionHit;
     GetHightestPriorityDetectionHit(allDetectionHits, detectionHit);
+    
+    m_profiler.stopProfilingScope("DETECT");
 
     UpdatePlayerInteractionBehavior(detectionHit, deltaTime);
 
@@ -280,6 +367,20 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), FColor::Orange, 0.f, false);
 
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
+}
+
+/// <summary>
+/// Displays elapsed time for profiled scopes above the agent.
+/// </summary>
+void ASDTAIController::DisplayProfilerTimes() {
+    auto numScopes = m_profiler.scopes.size();
+    for (int i = 0; i < numScopes; ++i) {
+        std::string scope = m_profiler.scopes[i];
+        std::stringstream stream;
+        stream << scope << ": " << std::fixed << std::setprecision(3) << m_profiler.getScopeElapsedSeconds(scope) * 1000 << " ms";
+        std::string text = stream.str();
+        DrawDebugString(GetWorld(), FVector(0.0f, 0.0f, 100.0f * (numScopes - i)), text.c_str(), GetPawn(), FColor::White, 0.0f, false);
+    }
 }
 
 bool ASDTAIController::HasLoSOnHit(const FHitResult& hit)

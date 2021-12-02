@@ -2,9 +2,12 @@
 
 #pragma once
 
+#include "Profiling.h"
 #include "CoreMinimal.h"
 #include "SDTBaseAIController.h"
+#include "TargetLKPInfo.h"
 #include "SDTAIController.generated.h"
+
 
 /**
  * 
@@ -44,6 +47,8 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
     bool Landing = false;
 
+    
+
 protected:
 
     enum PlayerInteractionBehavior
@@ -69,11 +74,23 @@ public:
     void RotateTowards(const FVector& targetLocation);
     void SetActorLocation(const FVector& targetLocation);
     void AIStateInterrupted();
+    void StartBehaviorTree(APawn* pawn);
+    void StopBehaviorTree(APawn* pawn);
+    UBlackboardComponent* GetBlackBoardComponent() const { return m_blackboardComponent; }
+    uint8 GetTargetPowerUpKeyID() const { return m_isTargetPowerUpKeyID; }
+    uint8 GetTargetSeenKeyID() const { return m_isTargetSeenKeyID; }
+    uint8 GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
+    TargetLKPInfo GetCurrentTargetLKPInfo() const { return m_targetLkpInfo;}
+    void MoveToAssignedPos();
 
+    uint8 GetTargetFleeLocationKeyID() const { return m_targetFleeLocationBBKeyID; }
+protected:
+    virtual void OnPossess(APawn* pawn) override;
 private:
     virtual void GoToBestTarget(float deltaTime) override;
     virtual void UpdatePlayerInteraction(float deltaTime) override;
     virtual void ShowNavigationPath() override;
+    void DisplayProfilerTimes();
 
 
 protected:
@@ -81,4 +98,18 @@ protected:
     FRotator m_ObstacleAvoidanceRotation;
     FTimerHandle m_PlayerInteractionNoLosTimer;
     PlayerInteractionBehavior m_PlayerInteractionBehavior;
+    profiling::Profiler m_profiler;
+
+    //
+    UPROPERTY(transient)
+        UBehaviorTreeComponent* m_behaviorTreeComponent;
+    UPROPERTY(transient)
+        UBlackboardComponent* m_blackboardComponent;
+    uint8 m_isTargetPowerUpKeyID;
+    uint8 m_isTargetSeenKeyID;
+    uint8 m_targetPosBBKeyID;
+
+    TargetLKPInfo m_targetLkpInfo;
+    
+    uint8 m_targetFleeLocationBBKeyID;
 };

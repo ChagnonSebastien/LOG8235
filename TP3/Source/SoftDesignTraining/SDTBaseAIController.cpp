@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SDTBaseAIController.h"
+#include "SoftDesignTrainingCharacter.h"
 #include "SoftDesignTraining.h"
 
 ASDTBaseAIController::ASDTBaseAIController(const FObjectInitializer& ObjectInitializer)
@@ -15,7 +16,7 @@ void ASDTBaseAIController::Tick(float deltaTime)
 {
     Super::Tick(deltaTime);
 
-    UpdatePlayerInteraction(deltaTime);
+  /*  UpdatePlayerInteraction(deltaTime);
 
     if (m_ReachedTarget)
     {
@@ -24,7 +25,7 @@ void ASDTBaseAIController::Tick(float deltaTime)
     else
     {
         ShowNavigationPath();
-    }
+    }*/
 }
 
 
