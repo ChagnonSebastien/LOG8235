@@ -9,12 +9,14 @@ EBTNodeResult::Type UMyBTTask_Chasing::ExecuteTask(UBehaviorTreeComponent& Owner
 		ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 		if (!playerCharacter) {
 			GEngine->AddOnScreenDebugMessage(0, 2, FColor::Green, TEXT("Should not chase1"));
+			aiController->m_profiler.stopProfilingScope("DETECT");
 			return EBTNodeResult::Failed;
 		}
 		
 		OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetPosBBKeyID(), playerCharacter->GetActorLocation());
 		aiController->MoveToLocation(playerCharacter->GetActorLocation(), 0.5f, false, true, true, NULL, false);
 		//GEngine->AddOnScreenDebugMessage(0, 2, FColor::Green, TEXT("Should chase"));
+		aiController->m_profiler.stopProfilingScope("DETECT");
 		return EBTNodeResult::Succeeded;
 	}
 	GEngine->AddOnScreenDebugMessage(0, 2, FColor::Green, TEXT("Should not chase3"));

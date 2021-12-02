@@ -47,6 +47,7 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
     bool Landing = false;
 
+    profiling::Profiler m_profiler;
     
 
 protected:
@@ -70,6 +71,7 @@ protected:
     void OnMoveToTarget();
 
 public:
+    virtual void Tick(float deltaTime) override;
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
     void RotateTowards(const FVector& targetLocation);
     void SetActorLocation(const FVector& targetLocation);
@@ -83,6 +85,7 @@ public:
     TargetLKPInfo GetCurrentTargetLKPInfo() const { return m_targetLkpInfo;}
     void MoveToAssignedPos();
 
+    void DisplayProfilerTimes(float deltaTime);
     uint8 GetTargetFleeLocationKeyID() const { return m_targetFleeLocationBBKeyID; }
 protected:
     virtual void OnPossess(APawn* pawn) override;
@@ -90,7 +93,6 @@ private:
     virtual void GoToBestTarget(float deltaTime) override;
     virtual void UpdatePlayerInteraction(float deltaTime) override;
     virtual void ShowNavigationPath() override;
-    void DisplayProfilerTimes();
 
 
 protected:
@@ -98,7 +100,6 @@ protected:
     FRotator m_ObstacleAvoidanceRotation;
     FTimerHandle m_PlayerInteractionNoLosTimer;
     PlayerInteractionBehavior m_PlayerInteractionBehavior;
-    profiling::Profiler m_profiler;
 
     //
     UPROPERTY(transient)

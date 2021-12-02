@@ -6,6 +6,7 @@
 EBTNodeResult::Type UMyBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner())) {
+		aiController->m_profiler.startProfilingScope("COLLECT");
 
 		float closestSqrCollectibleDistance = 18446744073709551610.f;
 		ASDTCollectible* closestCollectible = nullptr;
@@ -34,18 +35,21 @@ EBTNodeResult::Type UMyBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& OwnerC
 
 			ASDTCollectible* collectibleActor = Cast<ASDTCollectible>(foundCollectibles[index]);
 			if (!collectibleActor) {
+				aiController->m_profiler.stopProfilingScope("COLLECT");
 				return EBTNodeResult::Failed;
 			}
 
 			if (!collectibleActor->IsOnCooldown())
 			{
 				aiController->MoveToLocation(foundCollectibles[index]->GetActorLocation(), 0.5f, false, true, true, NULL, false);
+				aiController->m_profiler.stopProfilingScope("COLLECT");
 				return EBTNodeResult::Succeeded;
 			}
 			else
 			{
 				foundCollectibles.RemoveAt(index);
 			}
+			aiController->m_profiler.stopProfilingScope("COLLECT");
 		}
 
 	}

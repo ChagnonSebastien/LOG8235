@@ -6,13 +6,17 @@
 EBTNodeResult::Type UMyBTTask_Fleeing::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
      if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner())) {
+         aiController->m_profiler.startProfilingScope("FLEE");
 
             float bestLocationScore = 0.f;
             ASDTFleeLocation* bestFleeLocation = nullptr;
 
             ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(aiController->GetWorld(), 0);
             if (!playerCharacter)
+            {
+                aiController->m_profiler.stopProfilingScope("FLEE");
                 return EBTNodeResult::Failed;
+            }
 
             for (TActorIterator<ASDTFleeLocation> actorIterator(aiController->GetWorld(), ASDTFleeLocation::StaticClass()); actorIterator; ++actorIterator)
             {
@@ -44,8 +48,10 @@ EBTNodeResult::Type UMyBTTask_Fleeing::ExecuteTask(UBehaviorTreeComponent& Owner
             {
                 aiController->MoveToLocation(bestFleeLocation->GetActorLocation(), 0.5f, false, true, false, NULL, false);
                 OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetFleeLocationKeyID(), bestFleeLocation->GetActorLocation());
+                aiController->m_profiler.stopProfilingScope("FLEE");
                 return EBTNodeResult::Succeeded;
             }
+            aiController->m_profiler.stopProfilingScope("FLEE");
      }
      return EBTNodeResult::Failed;
 }
