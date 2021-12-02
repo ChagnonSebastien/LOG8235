@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Profiling.h"
 #include "CoreMinimal.h"
 #include "SDTBaseAIController.h"
 #include "SDTAIController.generated.h"
@@ -74,6 +75,7 @@ private:
     virtual void GoToBestTarget(float deltaTime) override;
     virtual void UpdatePlayerInteraction(float deltaTime) override;
     virtual void ShowNavigationPath() override;
+    void DisplayProfilerTimes();
 
 
 protected:
@@ -81,4 +83,5 @@ protected:
     FRotator m_ObstacleAvoidanceRotation;
     FTimerHandle m_PlayerInteractionNoLosTimer;
     PlayerInteractionBehavior m_PlayerInteractionBehavior;
+    profiling::Profiler m_profiler;
 };
