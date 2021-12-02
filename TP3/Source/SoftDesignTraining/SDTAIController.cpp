@@ -10,6 +10,7 @@
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Object.h"
 #include "SoftDesignTrainingCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "AiAgentGroupManager.h"
 #include "Kismet/KismetMathLibrary.h"
 //#include "UnrealMathUtility.h"
 #include "SDTUtils.h"
