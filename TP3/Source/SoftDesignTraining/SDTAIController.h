@@ -82,6 +82,7 @@ public:
     TargetLKPInfo GetCurrentTargetLKPInfo() const { return m_targetLkpInfo;}
     void MoveToAssignedPos();
 
+    uint8 GetTargetFleeLocationKeyID() const { return m_targetFleeLocationBBKeyID; }
 protected:
     virtual void OnPossess(APawn* pawn) override;
 private:
@@ -107,4 +108,5 @@ protected:
 
     TargetLKPInfo m_targetLkpInfo;
     
+    uint8 m_targetFleeLocationBBKeyID;
 };
