@@ -1,5 +1,4 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
 #include <iomanip>
 #include <sstream>
 
@@ -15,6 +14,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AiAgentGroupManager.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "TargetLKPInfo.h"
 //#include "UnrealMathUtility.h"
 #include "SDTUtils.h"
 #include "EngineUtils.h"
@@ -32,7 +32,7 @@ void ASDTAIController::StartBehaviorTree(APawn* pawn)
 {
     if (ASoftDesignTrainingCharacter* aiBaseCharacter = Cast<ASoftDesignTrainingCharacter>(pawn))
     {
-        
+
         if (aiBaseCharacter->GetBehaviorTree())
         {
             m_behaviorTreeComponent->StartTree(*aiBaseCharacter->GetBehaviorTree());
@@ -66,6 +66,7 @@ void ASDTAIController::OnPossess(APawn* pawn)
             m_isTargetSeenKeyID = m_blackboardComponent->GetKeyID("isPlayerSeen");
             m_targetPosBBKeyID = m_blackboardComponent->GetKeyID("EnemyActor");
             m_targetFleeLocationBBKeyID = m_blackboardComponent->GetKeyID("FleeingLocation");
+            m_targetPlayerLocationBBKeyID = m_blackboardComponent->GetKeyID("TargetLocation");
             //Set this agent in the BT
             m_blackboardComponent->SetValue<UBlackboardKeyType_Object>(m_blackboardComponent->GetKeyID("SelfActor"), pawn);
         }
@@ -105,7 +106,9 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
         break;
 
     case PlayerInteractionBehavior_Chase:
+
         MoveToPlayer();
+
         break;
 
     case PlayerInteractionBehavior_Flee:
@@ -281,6 +284,7 @@ void ASDTAIController::SetActorLocation(const FVector& targetLocation)
 void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
     Super::OnMoveCompleted(RequestID, Result);
+
     m_ReachedTarget = true;
 }
 
@@ -307,6 +311,45 @@ void ASDTAIController::ShowNavigationPath()
 
     m_profiler.stopProfilingScope("UPDATE");
     DisplayProfilerTimes();
+}
+
+bool ASDTAIController::IsPlayerSeen()
+{
+    //finish jump before updating AI state
+    if (AtJumpSegment)
+        return false;
+
+    APawn* selfPawn = GetPawn();
+    if (!selfPawn)
+        return false;
+
+    ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+    if (!playerCharacter)
+        return false;
+
+    FVector detectionStartLocation = selfPawn->GetActorLocation() + selfPawn->GetActorForwardVector() * m_DetectionCapsuleForwardStartingOffset;
+    FVector detectionEndLocation = detectionStartLocation + selfPawn->GetActorForwardVector() * m_DetectionCapsuleHalfLength * 2;
+
+    TArray<TEnumAsByte<EObjectTypeQuery>> detectionTraceObjectTypes;
+    detectionTraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(COLLISION_PLAYER));
+
+    TArray<FHitResult> allDetectionHits;
+    GetWorld()->SweepMultiByObjectType(allDetectionHits, detectionStartLocation, detectionEndLocation, FQuat::Identity, detectionTraceObjectTypes, FCollisionShape::MakeSphere(m_DetectionCapsuleRadius));
+
+    FHitResult detectionHit;
+    GetHightestPriorityDetectionHit(allDetectionHits, detectionHit);
+
+    bool isPlayerSeen = false;
+    if (detectionHit.GetComponent() && detectionHit.GetComponent()->GetCollisionObjectType() == COLLISION_PLAYER) {
+        isPlayerSeen = true;
+        m_targetLkpInfo.SetLastUpdatedTimeStamp(UGameplayStatics::GetRealTimeSeconds(GetWorld()));
+        m_targetLkpInfo.SetLKPPos(playerCharacter->GetActorLocation());
+        m_targetLkpInfo.SetLKPState(TargetLKPInfo::ELKPState::LKPState_Valid);
+
+    }
+
+    return isPlayerSeen;
+
 }
 
 void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
@@ -339,7 +382,7 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 
     FHitResult detectionHit;
     GetHightestPriorityDetectionHit(allDetectionHits, detectionHit);
-    
+
     m_profiler.stopProfilingScope("DETECT");
 
     UpdatePlayerInteractionBehavior(detectionHit, deltaTime);

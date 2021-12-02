@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTService.h"
+#include "BehaviorTree/Blackboard/BlackboardKeyType_Vector.h"
 #include "MyBTIsPlayerSeen.generated.h"
+
 
 /**
  *

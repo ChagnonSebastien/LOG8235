@@ -5,47 +5,53 @@
 
 EBTNodeResult::Type UMyBTTask_Fleeing::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-     if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner())) {
+	if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner())) {
+		if (!OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Bool>(aiController->GetTargetPowerUpKeyID()) ||
+			!OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenKeyID())) {
+			return EBTNodeResult::Failed;
+		}
 
-            float bestLocationScore = 0.f;
-            ASDTFleeLocation* bestFleeLocation = nullptr;
 
-            ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(aiController->GetWorld(), 0);
-            if (!playerCharacter)
-                return EBTNodeResult::Failed;
 
-            for (TActorIterator<ASDTFleeLocation> actorIterator(aiController->GetWorld(), ASDTFleeLocation::StaticClass()); actorIterator; ++actorIterator)
-            {
-                ASDTFleeLocation* fleeLocation = Cast<ASDTFleeLocation>(*actorIterator);
-                if (fleeLocation)
-                {
-                    float distToFleeLocation = FVector::Dist(fleeLocation->GetActorLocation(), playerCharacter->GetActorLocation());
+		float bestLocationScore = 0.f;
+		ASDTFleeLocation* bestFleeLocation = nullptr;
 
-                    FVector selfToPlayer = playerCharacter->GetActorLocation() - aiController->GetPawn()->GetActorLocation();
-                    selfToPlayer.Normalize();
+		ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(aiController->GetWorld(), 0);
+		if (!playerCharacter)
+			return EBTNodeResult::Failed;
 
-                    FVector selfToFleeLocation = fleeLocation->GetActorLocation() - aiController->GetPawn()->GetActorLocation();
-                    selfToFleeLocation.Normalize();
+		for (TActorIterator<ASDTFleeLocation> actorIterator(aiController->GetWorld(), ASDTFleeLocation::StaticClass()); actorIterator; ++actorIterator)
+		{
+			ASDTFleeLocation* fleeLocation = Cast<ASDTFleeLocation>(*actorIterator);
+			if (fleeLocation)
+			{
+				float distToFleeLocation = FVector::Dist(fleeLocation->GetActorLocation(), playerCharacter->GetActorLocation());
 
-                    float fleeLocationToPlayerAngle = FMath::RadiansToDegrees(acosf(FVector::DotProduct(selfToPlayer, selfToFleeLocation)));
-                    float locationScore = distToFleeLocation + fleeLocationToPlayerAngle * 100.f;
+				FVector selfToPlayer = playerCharacter->GetActorLocation() - aiController->GetPawn()->GetActorLocation();
+				selfToPlayer.Normalize();
 
-                    if (locationScore > bestLocationScore)
-                    {
-                        bestLocationScore = locationScore;
-                        bestFleeLocation = fleeLocation;
-                    }
+				FVector selfToFleeLocation = fleeLocation->GetActorLocation() - aiController->GetPawn()->GetActorLocation();
+				selfToFleeLocation.Normalize();
 
-                    DrawDebugString(aiController->GetWorld(), FVector(0.f, 0.f, 10.f), FString::SanitizeFloat(locationScore), fleeLocation, FColor::Red, 5.f, false);
-                }
-            }
+				float fleeLocationToPlayerAngle = FMath::RadiansToDegrees(acosf(FVector::DotProduct(selfToPlayer, selfToFleeLocation)));
+				float locationScore = distToFleeLocation + fleeLocationToPlayerAngle * 100.f;
 
-            if (bestFleeLocation)
-            {
-                aiController->MoveToLocation(bestFleeLocation->GetActorLocation(), 0.5f, false, true, false, NULL, false);
-                OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetFleeLocationKeyID(), bestFleeLocation->GetActorLocation());
-                return EBTNodeResult::Succeeded;
-            }
-     }
-     return EBTNodeResult::Failed;
+				if (locationScore > bestLocationScore)
+				{
+					bestLocationScore = locationScore;
+					bestFleeLocation = fleeLocation;
+				}
+
+				DrawDebugString(aiController->GetWorld(), FVector(0.f, 0.f, 10.f), FString::SanitizeFloat(locationScore), fleeLocation, FColor::Red, 5.f, false);
+			}
+		}
+
+		if (bestFleeLocation)
+		{
+			aiController->MoveToLocation(bestFleeLocation->GetActorLocation(), 0.5f, false, true, false, NULL, false);
+			OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetFleeLocationKeyID(), bestFleeLocation->GetActorLocation());
+			return EBTNodeResult::Succeeded;
+		}
+	}
+	return EBTNodeResult::Failed;
 }

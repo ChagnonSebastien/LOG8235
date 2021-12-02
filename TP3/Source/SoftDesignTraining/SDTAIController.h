@@ -81,9 +81,16 @@ public:
     uint8 GetTargetSeenKeyID() const { return m_isTargetSeenKeyID; }
     uint8 GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
     TargetLKPInfo GetCurrentTargetLKPInfo() const { return m_targetLkpInfo;}
+    void InvalidateTargetLKPInfo() { m_targetLkpInfo.SetLKPState(TargetLKPInfo::ELKPState::LKPState_Invalid); }
     void MoveToAssignedPos();
 
     uint8 GetTargetFleeLocationKeyID() const { return m_targetFleeLocationBBKeyID; }
+    uint8 GetTargetPlayerLocationKeyID() const { return m_targetPlayerLocationBBKeyID; }
+
+    PlayerInteractionBehavior GetPlayerInteractionBehavior() const { return m_PlayerInteractionBehavior; }
+    bool IsPlayerSeen();
+
+
 protected:
     virtual void OnPossess(APawn* pawn) override;
 private:
@@ -91,6 +98,8 @@ private:
     virtual void UpdatePlayerInteraction(float deltaTime) override;
     virtual void ShowNavigationPath() override;
     void DisplayProfilerTimes();
+    
+
 
 
 protected:
@@ -110,6 +119,7 @@ protected:
     uint8 m_targetPosBBKeyID;
 
     TargetLKPInfo m_targetLkpInfo;
-    
+ 
     uint8 m_targetFleeLocationBBKeyID;
+    uint8 m_targetPlayerLocationBBKeyID;
 };

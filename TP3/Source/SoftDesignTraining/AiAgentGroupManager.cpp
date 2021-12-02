@@ -79,7 +79,7 @@ FVector AiAgentGroupManager::GetAssignedPos(UWorld* World, ASDTAIController* aiA
     float angle = 2.f * PI / (float)nbPoints;
 
     FVector targetLKP = m_targetLkpInfo.GetLKPPos();
-    float radius = 300.f;
+    float radius = 100.f;
 
     targetLKP.X += radius * cos(angle * index);
     targetLKP.Y += radius * sin(angle * index);
