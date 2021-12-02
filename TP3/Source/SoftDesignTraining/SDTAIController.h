@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "SDTBaseAIController.h"
+#include "TargetLKPInfo.h"
 #include "SDTAIController.generated.h"
+
 
 /**
  * 
@@ -77,6 +79,9 @@ public:
     uint8 GetTargetPowerUpKeyID() const { return m_isTargetPowerUpKeyID; }
     uint8 GetTargetSeenKeyID() const { return m_isTargetSeenKeyID; }
     uint8 GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
+    TargetLKPInfo GetCurrentTargetLKPInfo() const { return m_targetLkpInfo;}
+    void MoveToAssignedPos();
+
 protected:
     virtual void OnPossess(APawn* pawn) override;
 private:
@@ -99,4 +104,7 @@ protected:
     uint8 m_isTargetPowerUpKeyID;
     uint8 m_isTargetSeenKeyID;
     uint8 m_targetPosBBKeyID;
+
+    TargetLKPInfo m_targetLkpInfo;
+    
 };

@@ -21,6 +21,7 @@ ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     m_PlayerInteractionBehavior = PlayerInteractionBehavior_Collect;
     m_behaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorTreeComponent"));
     m_blackboardComponent = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackBoardComponent"));
+    m_targetLkpInfo = TargetLKPInfo();
 }
 
 void ASDTAIController::StartBehaviorTree(APawn* pawn)
@@ -66,7 +67,22 @@ void ASDTAIController::OnPossess(APawn* pawn)
     }
 }
 
+void ASDTAIController::MoveToAssignedPos()
+{
+    AiAgentGroupManager* aiAgentGroupManager = AiAgentGroupManager::GetInstance();
+    FVector assignedPos;
+    if (aiAgentGroupManager)
+    {
+        assignedPos = aiAgentGroupManager->GetAssignedPos(GetWorld(), this);
+    }
+    else
+    {
+        return;
+    }
 
+    MoveToLocation(assignedPos, 0.5f, false, true, true, NULL, false);
+    OnMoveToTarget();
+}
 
 
 
