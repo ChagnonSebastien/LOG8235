@@ -27,7 +27,7 @@ EBTNodeResult::Type UMyBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& OwnerC
 					bestDistance = playerDistanceToCollectible;
 					index = i;
 				}
-			} // TAKE SECOND BEST
+			}
 
 			//int index = foundCollectibles.Num() - 1;
 			//GEngine->AddOnScreenDebugMessage(0, 2, FColor::Green, FString::Printf(TEXT("index %f"), index));

@@ -77,6 +77,7 @@ public:
     uint8 GetTargetPowerUpKeyID() const { return m_isTargetPowerUpKeyID; }
     uint8 GetTargetSeenKeyID() const { return m_isTargetSeenKeyID; }
     uint8 GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
+    uint8 GetTargetFleeLocationKeyID() const { return m_targetFleeLocationBBKeyID; }
 protected:
     virtual void OnPossess(APawn* pawn) override;
 private:
@@ -99,4 +100,5 @@ protected:
     uint8 m_isTargetPowerUpKeyID;
     uint8 m_isTargetSeenKeyID;
     uint8 m_targetPosBBKeyID;
+    uint8 m_targetFleeLocationBBKeyID;
 };
