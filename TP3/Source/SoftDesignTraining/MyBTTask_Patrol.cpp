@@ -6,8 +6,6 @@
 EBTNodeResult::Type UMyBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner())) {
-
-
 		float closestSqrCollectibleDistance = 18446744073709551610.f;
 		ASDTCollectible* closestCollectible = nullptr;
 
@@ -48,7 +46,11 @@ EBTNodeResult::Type UMyBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& OwnerC
 				foundCollectibles.RemoveAt(index);
 			}
 		}
-
 	}
 	return EBTNodeResult::Failed;
 }
+
+/*
+
+
+*/

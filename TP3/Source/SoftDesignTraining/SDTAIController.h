@@ -62,9 +62,7 @@ protected:
     void UpdatePlayerInteractionBehavior(const FHitResult& detectionHit, float deltaTime);
     PlayerInteractionBehavior GetCurrentPlayerInteractionBehavior(const FHitResult& hit);
     bool HasLoSOnHit(const FHitResult& hit);
-    void MoveToRandomCollectible();
     void MoveToPlayer();
-    void MoveToBestFleeLocation();
     void PlayerInteractionLoSUpdate();
     void OnPlayerInteractionNoLosDone();
     void OnMoveToTarget();
@@ -76,6 +74,9 @@ public:
     void AIStateInterrupted();
     void StartBehaviorTree(APawn* pawn);
     void StopBehaviorTree(APawn* pawn);
+    void MoveToRandomCollectible();
+    void MoveToBestFleeLocation();
+
     UBlackboardComponent* GetBlackBoardComponent() const { return m_blackboardComponent; }
     uint8 GetTargetPowerUpKeyID() const { return m_isTargetPowerUpKeyID; }
     uint8 GetTargetSeenKeyID() const { return m_isTargetSeenKeyID; }

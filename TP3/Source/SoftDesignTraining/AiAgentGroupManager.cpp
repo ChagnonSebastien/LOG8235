@@ -36,6 +36,11 @@ void AiAgentGroupManager::UnregisterAIAgent(ASDTAIController* aiAgent)
     m_registeredAgents.Remove(aiAgent);
 }
 
+void AiAgentGroupManager::UnregisterAll()
+{
+    m_registeredAgents.Empty();
+}
+
 bool AiAgentGroupManager::IsPlayerDetected()
 {
     int agentCount = m_registeredAgents.Num();
@@ -79,7 +84,7 @@ FVector AiAgentGroupManager::GetAssignedPos(UWorld* World, ASDTAIController* aiA
     float angle = 2.f * PI / (float)nbPoints;
 
     FVector targetLKP = m_targetLkpInfo.GetLKPPos();
-    float radius = 100.f;
+    float radius = 250.f;
 
     targetLKP.X += radius * cos(angle * index);
     targetLKP.Y += radius * sin(angle * index);

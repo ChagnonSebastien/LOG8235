@@ -340,7 +340,7 @@ bool ASDTAIController::IsPlayerSeen()
     GetHightestPriorityDetectionHit(allDetectionHits, detectionHit);
 
     bool isPlayerSeen = false;
-    if (detectionHit.GetComponent() && detectionHit.GetComponent()->GetCollisionObjectType() == COLLISION_PLAYER) {
+    if (HasLoSOnHit(detectionHit)) {
         isPlayerSeen = true;
         m_targetLkpInfo.SetLastUpdatedTimeStamp(UGameplayStatics::GetRealTimeSeconds(GetWorld()));
         m_targetLkpInfo.SetLKPPos(playerCharacter->GetActorLocation());

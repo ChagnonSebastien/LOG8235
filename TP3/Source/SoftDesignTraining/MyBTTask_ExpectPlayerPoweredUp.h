@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
+#include "AiAgentGroupManager.h"
 #include "MyBTTask_ExpectPlayerPoweredUp.generated.h"
 
 /**

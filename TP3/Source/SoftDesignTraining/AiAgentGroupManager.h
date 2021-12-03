@@ -15,6 +15,7 @@ public:
 
     void RegisterAIAgent(ASDTAIController* aiAgent);
     void UnregisterAIAgent(ASDTAIController* aiAgent);
+    void UnregisterAll();
     bool IsPlayerDetected();
     FVector GetAssignedPos(UWorld* World, ASDTAIController* aiAgent);
     void DrawSphereOnRegisteredAgents(UWorld* World);

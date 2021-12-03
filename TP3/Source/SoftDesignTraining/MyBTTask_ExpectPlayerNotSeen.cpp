@@ -14,30 +14,27 @@ EBTNodeResult::Type UMyBTTask_ExpectPlayerNotSeen::ExecuteTask(UBehaviorTreeComp
 	{
 
 		bool playerSeen = aiController->IsPlayerSeen();
+
 		AiAgentGroupManager* groupManager = AiAgentGroupManager::GetInstance();
 
 		if (groupManager) {
 
 			if (groupManager->IsAgentInGroup(aiController)) {
-				bool playerDetectedByGroup = groupManager->IsPlayerDetected();
-				OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenKeyID(), playerDetectedByGroup);
+				playerSeen = groupManager->IsPlayerDetected();
 
-				if (playerDetectedByGroup) {
-					GEngine->AddOnScreenDebugMessage(0, 2, FColor::Green, TEXT("Player is seen by Group"));
+				if (playerSeen) {
 
 					FVector lkp = groupManager->GetAssignedPos(GetWorld(), aiController);
 					FVector actorLocation = aiController->GetPawn()->GetActorLocation();
+					ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+
 					if ((lkp - actorLocation).Size() < 50.0) {
-						GEngine->AddOnScreenDebugMessage(0, 2, FColor::Green, TEXT("PositionReached"));
 						groupManager->UnregisterAIAgent(aiController);
-						aiController->InvalidateTargetLKPInfo();
-						OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenKeyID(), false);
+						playerSeen = false;
 					}
-					else if ((lkp - actorLocation).Size() < 100.0) {
-						ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-						if (playerCharacter) {
-							OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetPlayerLocationKeyID(), playerCharacter->GetActorLocation());
-						}
+					else if ( playerCharacter && (playerCharacter->GetActorLocation() - actorLocation).Size() <= 250.0) {
+
+						OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetPlayerLocationKeyID(), playerCharacter->GetActorLocation());
 					}
 					else {
 						OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetPlayerLocationKeyID(), lkp);
@@ -45,9 +42,7 @@ EBTNodeResult::Type UMyBTTask_ExpectPlayerNotSeen::ExecuteTask(UBehaviorTreeComp
 				}
 			}
 			else {
-				GEngine->AddOnScreenDebugMessage(0, 2, FColor::Green, TEXT("Agent not in group"));
-				OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenKeyID(), playerSeen);
-
+				
 				if (playerSeen) {
 					groupManager->RegisterAIAgent(aiController);
 					ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
@@ -59,8 +54,10 @@ EBTNodeResult::Type UMyBTTask_ExpectPlayerNotSeen::ExecuteTask(UBehaviorTreeComp
 			}
 		}
 
+		return playerSeen ? EBTNodeResult::Failed : EBTNodeResult::Succeeded;
+
 	}
-	else OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenKeyID(), false);
+	return EBTNodeResult::Failed;
 
 
 }

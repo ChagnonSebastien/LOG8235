@@ -6,14 +6,15 @@
 EBTNodeResult::Type UMyBTTask_Fleeing::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner())) {
-		if (!OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Bool>(aiController->GetTargetPowerUpKeyID()) ||
-			!OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenKeyID())) {
-			return EBTNodeResult::Failed;
-		}
 
+		aiController->MoveToBestFleeLocation();
+		return EBTNodeResult::Succeeded;
+	}
+	return EBTNodeResult::Failed;
+}
 
-
-		float bestLocationScore = 0.f;
+/*
+float bestLocationScore = 0.f;
 		ASDTFleeLocation* bestFleeLocation = nullptr;
 
 		ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(aiController->GetWorld(), 0);
@@ -52,6 +53,4 @@ EBTNodeResult::Type UMyBTTask_Fleeing::ExecuteTask(UBehaviorTreeComponent& Owner
 			OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetFleeLocationKeyID(), bestFleeLocation->GetActorLocation());
 			return EBTNodeResult::Succeeded;
 		}
-	}
-	return EBTNodeResult::Failed;
-}
+*/
