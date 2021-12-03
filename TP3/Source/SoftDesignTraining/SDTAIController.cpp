@@ -28,6 +28,11 @@ ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     m_targetLkpInfo = TargetLKPInfo();
 }
 
+void ASDTAIController::Tick(float deltaTime)
+{
+    DisplayProfilerTimes(deltaTime);
+}
+
 void ASDTAIController::StartBehaviorTree(APawn* pawn)
 {
     if (ASoftDesignTrainingCharacter* aiBaseCharacter = Cast<ASoftDesignTrainingCharacter>(pawn))
@@ -119,7 +124,6 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     }
 
     m_profiler.stopProfilingScope("UPDATE");
-    DisplayProfilerTimes();
 }
 
 void ASDTAIController::MoveToRandomCollectible()
@@ -310,7 +314,7 @@ void ASDTAIController::ShowNavigationPath()
     }
 
     m_profiler.stopProfilingScope("UPDATE");
-    DisplayProfilerTimes();
+    DisplayProfilerTimes(0.01);
 }
 
 bool ASDTAIController::IsPlayerSeen()
@@ -415,14 +419,14 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 /// <summary>
 /// Displays elapsed time for profiled scopes above the agent.
 /// </summary>
-void ASDTAIController::DisplayProfilerTimes() {
+void ASDTAIController::DisplayProfilerTimes(float deltaTime) {
     auto numScopes = m_profiler.scopes.size();
     for (int i = 0; i < numScopes; ++i) {
         std::string scope = m_profiler.scopes[i];
         std::stringstream stream;
         stream << scope << ": " << std::fixed << std::setprecision(3) << m_profiler.getScopeElapsedSeconds(scope) * 1000 << " ms";
         std::string text = stream.str();
-        DrawDebugString(GetWorld(), FVector(0.0f, 0.0f, 100.0f * (numScopes - i)), text.c_str(), GetPawn(), FColor::White, 0.0f, false);
+        DrawDebugString(GetWorld(), FVector(0.0f, 0.0f, 100.0f * (numScopes - i)), text.c_str(), GetPawn(), FColor::White, deltaTime, false);
     }
 }
 

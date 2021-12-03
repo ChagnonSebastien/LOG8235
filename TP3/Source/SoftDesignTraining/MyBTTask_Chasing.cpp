@@ -5,9 +5,9 @@
 EBTNodeResult::Type UMyBTTask_Chasing::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner())) {
-		FVector targetLocation = OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Vector>(aiController->GetTargetPlayerLocationKeyID());
-		aiController->MoveToLocation(targetLocation, 0.5f, false, true, true, NULL, false);
-		return EBTNodeResult::Succeeded;
-	}
-	return EBTNodeResult::Failed;
+        FVector targetLocation = OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Vector>(aiController->GetTargetPlayerLocationKeyID());
+        aiController->MoveToLocation(targetLocation, 0.5f, false, true, true, NULL, false);
+        return EBTNodeResult::Succeeded;
+    }
+    return EBTNodeResult::Failed;
 }
