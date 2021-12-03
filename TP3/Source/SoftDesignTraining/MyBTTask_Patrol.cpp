@@ -7,6 +7,7 @@ EBTNodeResult::Type UMyBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& OwnerC
 {
 	if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner())) {
 
+
 		float closestSqrCollectibleDistance = 18446744073709551610.f;
 		ASDTCollectible* closestCollectible = nullptr;
 
