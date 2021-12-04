@@ -28,6 +28,20 @@ ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     m_targetLkpInfo = TargetLKPInfo();
 }
 
+void ASDTAIController::BeginPlay()
+{
+    Super::BeginPlay();
+
+    // Budget Allocation Setup
+    id = rand();
+
+    TArray<AActor*> foundBudgets;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), BudgetClass, foundBudgets);
+    budget = (ATimeBudget*)foundBudgets.Pop();
+    budget->registerController(id);
+    this->AddTickPrerequisiteActor(budget);
+}
+
 void ASDTAIController::Tick(float deltaTime)
 {
     DisplayProfilerTimes(deltaTime);

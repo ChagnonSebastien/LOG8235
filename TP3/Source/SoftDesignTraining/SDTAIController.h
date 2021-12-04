@@ -4,8 +4,11 @@
 
 #include "Profiling.h"
 #include "CoreMinimal.h"
+#include "TimeBudget.h"
 #include "SDTBaseAIController.h"
 #include "TargetLKPInfo.h"
+#include "Templates/SharedPointer.h"
+#include "GameFramework/Actor.h"
 #include "SDTAIController.generated.h"
 
 
@@ -47,6 +50,9 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
     bool Landing = false;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+    TSubclassOf<ATimeBudget> BudgetClass;
+
     profiling::Profiler m_profiler;
     
 
@@ -71,6 +77,7 @@ protected:
     void OnMoveToTarget();
 
 public:
+    virtual void BeginPlay() override;
     virtual void Tick(float deltaTime) override;
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
     void RotateTowards(const FVector& targetLocation);
@@ -113,4 +120,7 @@ protected:
     TargetLKPInfo m_targetLkpInfo;
     
     uint8 m_targetFleeLocationBBKeyID;
+
+    ATimeBudget* budget;
+    int id;
 };
