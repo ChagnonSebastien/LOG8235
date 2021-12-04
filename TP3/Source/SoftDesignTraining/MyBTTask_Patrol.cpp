@@ -16,8 +16,6 @@ EBTNodeResult::Type UMyBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& OwnerC
 
 		while (foundCollectibles.Num() != 0)
 		{
-			//int index = FMath::RandRange(0, foundCollectibles.Num() - 1);  code de depart pour choisir le collectible est au hasard
-
 			float bestDistance = 1000.f;
 			int index = 0;
 			for (int i = 0; i <= foundCollectibles.Num() - 1; i++) {
@@ -28,10 +26,7 @@ EBTNodeResult::Type UMyBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& OwnerC
 					bestDistance = playerDistanceToCollectible;
 					index = i;
 				}
-			} // TAKE SECOND BEST
-
-			//int index = foundCollectibles.Num() - 1;
-			//GEngine->AddOnScreenDebugMessage(0, 2, FColor::Green, FString::Printf(TEXT("index %f"), index));
+			}
 
 			ASDTCollectible* collectibleActor = Cast<ASDTCollectible>(foundCollectibles[index]);
 			if (!collectibleActor) {
@@ -51,7 +46,6 @@ EBTNodeResult::Type UMyBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& OwnerC
 			}
 			aiController->m_profiler.stopProfilingScope("COLLECT");
 		}
-
 	}
 	return EBTNodeResult::Failed;
 }

@@ -69,9 +69,7 @@ protected:
     void UpdatePlayerInteractionBehavior(const FHitResult& detectionHit, float deltaTime);
     PlayerInteractionBehavior GetCurrentPlayerInteractionBehavior(const FHitResult& hit);
     bool HasLoSOnHit(const FHitResult& hit);
-    void MoveToRandomCollectible();
     void MoveToPlayer();
-    void MoveToBestFleeLocation();
     void PlayerInteractionLoSUpdate();
     void OnPlayerInteractionNoLosDone();
     void OnMoveToTarget();
@@ -85,15 +83,25 @@ public:
     void AIStateInterrupted();
     void StartBehaviorTree(APawn* pawn);
     void StopBehaviorTree(APawn* pawn);
+    void MoveToRandomCollectible();
+    void MoveToBestFleeLocation();
+
     UBlackboardComponent* GetBlackBoardComponent() const { return m_blackboardComponent; }
     uint8 GetTargetPowerUpKeyID() const { return m_isTargetPowerUpKeyID; }
     uint8 GetTargetSeenKeyID() const { return m_isTargetSeenKeyID; }
     uint8 GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
     TargetLKPInfo GetCurrentTargetLKPInfo() const { return m_targetLkpInfo;}
+    void InvalidateTargetLKPInfo() { m_targetLkpInfo.SetLKPState(TargetLKPInfo::ELKPState::LKPState_Invalid); }
     void MoveToAssignedPos();
 
     void DisplayProfilerTimes(float deltaTime);
     uint8 GetTargetFleeLocationKeyID() const { return m_targetFleeLocationBBKeyID; }
+    uint8 GetTargetPlayerLocationKeyID() const { return m_targetPlayerLocationBBKeyID; }
+
+    PlayerInteractionBehavior GetPlayerInteractionBehavior() const { return m_PlayerInteractionBehavior; }
+    bool IsPlayerSeen();
+
+
 protected:
     virtual void OnPossess(APawn* pawn) override;
 private:
@@ -118,8 +126,9 @@ protected:
     uint8 m_targetPosBBKeyID;
 
     TargetLKPInfo m_targetLkpInfo;
-    
+ 
     uint8 m_targetFleeLocationBBKeyID;
+    uint8 m_targetPlayerLocationBBKeyID;
 
     ATimeBudget* budget;
     int id;

@@ -3,6 +3,7 @@
 #include "MyBTTask_isPlayerPoweredUp.h"
 #include "SoftDesignTraining.h"
 #include "SDTUtils.h"
+#include "AiAgentGroupManager.h"
 #include "SoftDesignTrainingCharacter.h"
 
 EBTNodeResult::Type UMyBTTask_isPlayerPoweredUp::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -10,6 +11,11 @@ EBTNodeResult::Type UMyBTTask_isPlayerPoweredUp::ExecuteTask(UBehaviorTreeCompon
 
     if (SDTUtils::IsPlayerPoweredUp(GetWorld()))
     {
+        AiAgentGroupManager* groupManager = AiAgentGroupManager::GetInstance();
+        if (groupManager) {
+            groupManager->UnregisterAll();
+        }
+
         return EBTNodeResult::Succeeded;
     }
 

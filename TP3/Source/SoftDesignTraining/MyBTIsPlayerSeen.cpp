@@ -6,11 +6,12 @@
 #include "SoftDesignTraining.h"
 #include "SDTUtils.h"
 #include "SDTAIController.h"
+#include "AiAgentGroupManager.h"
 #include "SoftDesignTrainingCharacter.h"
 
 UMyBTIsPlayerSeen::UMyBTIsPlayerSeen()
 {
-    bCreateNodeInstance = true;
+	bCreateNodeInstance = true;
 }
 
 void UMyBTIsPlayerSeen::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
@@ -39,22 +40,22 @@ void UMyBTIsPlayerSeen::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeM
     }
 }
 
-    //    if (ASoftDesignTrainingCharacter* aiBase = Cast<ASoftDesignTrainingCharacter>(aiController->GetCharacter()))
-    //    {
-    //        aiBase->DetectPlayer();
-    //        if (aiBase->IsTargetPlayerSeen())
-    //        {
-    //            //write to bb that the player is seen
-    //            OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenKeyID(), true);
+//    if (ASoftDesignTrainingCharacter* aiBase = Cast<ASoftDesignTrainingCharacter>(aiController->GetCharacter()))
+//    {
+//        aiBase->DetectPlayer();
+//        if (aiBase->IsTargetPlayerSeen())
+//        {
+//            //write to bb that the player is seen
+//            OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenKeyID(), true);
 
-    //            //write to bb the position of the target
-    //            OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetPosBBKeyID(), aiBase->GetTargetPlayerPos());
-    //        }
-    //        else
-    //        {
-    //            //write to bb that the player is not seen
-    //            OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenKeyID(), false);
-    //        }
+//            //write to bb the position of the target
+//            OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetPosBBKeyID(), aiBase->GetTargetPlayerPos());
+//        }
+//        else
+//        {
+//            //write to bb that the player is not seen
+//            OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenKeyID(), false);
+//        }
 
-    //    }
-    //}
+//    }
+//}
