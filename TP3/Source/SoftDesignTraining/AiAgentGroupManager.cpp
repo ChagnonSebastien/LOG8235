@@ -3,7 +3,6 @@
 #include "NavigationSystem.h"
 #include "AiAgentGroupManager.h"
 #include "SoftDesignTraining.h"
-#include "TargetLKPInfo.h"
 
 AiAgentGroupManager* AiAgentGroupManager::m_Instance;
 

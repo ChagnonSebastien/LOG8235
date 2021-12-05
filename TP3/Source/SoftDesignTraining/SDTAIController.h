@@ -6,7 +6,6 @@
 #include "CoreMinimal.h"
 #include "TimeBudget.h"
 #include "SDTBaseAIController.h"
-#include "TargetLKPInfo.h"
 #include "Templates/SharedPointer.h"
 #include "GameFramework/Actor.h"
 #include "SDTAIController.generated.h"
@@ -58,47 +57,22 @@ public:
 
 protected:
 
-    enum PlayerInteractionBehavior
-    {
-        PlayerInteractionBehavior_Collect,
-        PlayerInteractionBehavior_Chase,
-        PlayerInteractionBehavior_Flee
-    };
-
     void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit);
-    void UpdatePlayerInteractionBehavior(const FHitResult& detectionHit, float deltaTime);
-    PlayerInteractionBehavior GetCurrentPlayerInteractionBehavior(const FHitResult& hit);
     bool HasLoSOnHit(const FHitResult& hit);
-    void MoveToPlayer();
-    void PlayerInteractionLoSUpdate();
-    void OnPlayerInteractionNoLosDone();
 
 public:
     void OnMoveToTarget();
     virtual void BeginPlay() override;
     virtual void Tick(float deltaTime) override;
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
-    void RotateTowards(const FVector& targetLocation);
-    void SetActorLocation(const FVector& targetLocation);
     void AIStateInterrupted();
     void StartBehaviorTree(APawn* pawn);
-    void StopBehaviorTree(APawn* pawn);
-    void MoveToRandomCollectible();
-    FVector FindBestFleeLocation();
     FVector GetCurrentTargetPosition();
-
+    
     UBlackboardComponent* GetBlackBoardComponent() const { return m_blackboardComponent; }
-    uint8 GetTargetPowerUpKeyID() const { return m_isTargetPowerUpKeyID; }
-    uint8 GetTargetSeenKeyID() const { return m_isTargetSeenKeyID; }
-    uint8 GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
-    TargetLKPInfo GetCurrentTargetLKPInfo() const { return m_targetLkpInfo;}
-    void InvalidateTargetLKPInfo() { m_targetLkpInfo.SetLKPState(TargetLKPInfo::ELKPState::LKPState_Invalid); }
 
     void DisplayProfilerTimes(float deltaTime);
-    uint8 GetTargetFleeLocationKeyID() const { return m_targetFleeLocationBBKeyID; }
-    uint8 GetTargetPlayerLocationKeyID() const { return m_targetPlayerLocationBBKeyID; }
 
-    PlayerInteractionBehavior GetPlayerInteractionBehavior() const { return m_PlayerInteractionBehavior; }
     bool IsPlayerSeen();
 
     ATimeBudget* budget;
@@ -107,8 +81,6 @@ public:
 protected:
     virtual void OnPossess(APawn* pawn) override;
 private:
-    virtual void GoToBestTarget(float deltaTime) override;
-    virtual void UpdatePlayerInteraction(float deltaTime) override;
     virtual void ShowNavigationPath() override;
 
 
@@ -116,20 +88,10 @@ protected:
     FVector m_JumpTarget;
     FRotator m_ObstacleAvoidanceRotation;
     FTimerHandle m_PlayerInteractionNoLosTimer;
-    PlayerInteractionBehavior m_PlayerInteractionBehavior;
 
-    //
     UPROPERTY(transient)
-        UBehaviorTreeComponent* m_behaviorTreeComponent;
+    UBehaviorTreeComponent* m_behaviorTreeComponent;
     UPROPERTY(transient)
-        UBlackboardComponent* m_blackboardComponent;
-    uint8 m_isTargetPowerUpKeyID;
-    uint8 m_isTargetSeenKeyID;
-    uint8 m_targetPosBBKeyID;
-
-    TargetLKPInfo m_targetLkpInfo;
- 
-    uint8 m_targetFleeLocationBBKeyID;
-    uint8 m_targetPlayerLocationBBKeyID;
+    UBlackboardComponent* m_blackboardComponent;
 
 };

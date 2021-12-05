@@ -3,7 +3,6 @@
 #include "CoreMinimal.h"
 #include "NavigationSystem.h"
 #include "Containers/Array.h"
-#include "TargetLKPInfo.h"
 #include "DrawDebugHelpers.h"
 #include "CoreMinimal.h"
 
