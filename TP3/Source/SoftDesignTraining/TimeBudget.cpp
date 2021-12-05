@@ -30,8 +30,9 @@ void ATimeBudget::Tick(float DeltaTime)
 			controllers.Add(element);
 		}
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Received %d"), activeControllers.Num()));
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Received %d"), amountData));
 	activeControllers.Empty();
+	amountData = 0;
 }
 
 void ATimeBudget::registerController(int id)
@@ -41,6 +42,7 @@ void ATimeBudget::registerController(int id)
 
 bool ATimeBudget::requestAllocation(int id)
 {
+	amountData += 1;
 	int index = controllers.IndexOfByPredicate([id](int element){ return element == id; });
 	bool accept = index < 10;
 	if (accept) {
@@ -52,7 +54,6 @@ bool ATimeBudget::requestAllocation(int id)
 void ATimeBudget::notifyTime(float time)
 {
 	computeTime += time;
-	amountData += 1;
 	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Received %f"), time));
 }
 
