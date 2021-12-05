@@ -1,5 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "NavigationSystem.h"
 #include "AiAgentGroupManager.h"
 #include "SoftDesignTraining.h"
 #include "TargetLKPInfo.h"
@@ -26,12 +27,12 @@ void AiAgentGroupManager::Destroy()
     m_Instance = nullptr;
 }
 
-void AiAgentGroupManager::RegisterAIAgent(ASDTAIController* aiAgent)
+void AiAgentGroupManager::RegisterAIAgent(int aiAgent)
 {
     m_registeredAgents.AddUnique(aiAgent);
 }
 
-void AiAgentGroupManager::UnregisterAIAgent(ASDTAIController* aiAgent)
+void AiAgentGroupManager::UnregisterAIAgent(int aiAgent)
 {
     m_registeredAgents.Remove(aiAgent);
 }
@@ -41,81 +42,59 @@ void AiAgentGroupManager::UnregisterAll()
     m_registeredAgents.Empty();
 }
 
-bool AiAgentGroupManager::IsPlayerDetected()
+FVector AiAgentGroupManager::GetAssignedPos(UWorld* World, int aiAgent,  FVector currentLocation)
 {
-    int agentCount = m_registeredAgents.Num();
-    TargetLKPInfo outLKPInfo = TargetLKPInfo();
-    m_targetFound = false;
-
-    for (int i = 0; i < agentCount; ++i)
-    {
-        ASDTAIController* aiAgent = m_registeredAgents[i];
-        if (aiAgent)
-        {
-            const TargetLKPInfo& targetLKPInfo = aiAgent->GetCurrentTargetLKPInfo();
-            if (targetLKPInfo.GetLastUpdatedTimeStamp() > outLKPInfo.GetLastUpdatedTimeStamp())
-            {
-                m_targetFound = targetLKPInfo.GetLKPState() != TargetLKPInfo::ELKPState::LKPState_Invalid;
-                m_targetLkpInfo = targetLKPInfo;
-            }
-        }
+    float distance_to_LKP = FVector::Dist2D(currentLocation, m_LKP);
+    if (distance_to_LKP < 50) {
+        // Dismiss group if the LKP has been reached
+        this->UnregisterAll();
+        return m_LKP;
     }
 
-    return m_targetFound;
-}
+    int index = m_registeredAgents.IndexOfByPredicate([aiAgent] (int value){ return value == aiAgent; });
 
-FVector AiAgentGroupManager::GetAssignedPos(UWorld* World, ASDTAIController* aiAgent)
-{
-    // necessaire?
-    //IsPlayerDetected();
-
-    int32 index = 0;
-    int agentCount = m_registeredAgents.Num();
-    for (int i = 0; i < agentCount; ++i) {
-        ASDTAIController* currentAIAgent = m_registeredAgents[i];
-        if (aiAgent == currentAIAgent)
-        {
-            index = i;
-            break;
-        }
-    }
-
+    
+    // Spread agents around the player at a distance of 5m 
+    float radius = 500.f;
     int nbPoints = m_registeredAgents.Num();
     float angle = 2.f * PI / (float)nbPoints;
-
-    FVector targetLKP = m_targetLkpInfo.GetLKPPos();
-    float radius = 250.f;
-
+    FVector targetLKP = m_LKP;
     targetLKP.X += radius * cos(angle * index);
     targetLKP.Y += radius * sin(angle * index);
 
-    return targetLKP;
+    // The closer you are to the player, the closer the agent is assigned to the player.
+    // The goal is for all paths to converge to the player at some point
+    float distance_factor = distance_to_LKP / (radius * 2);
+    if (distance_factor > 1) distance_factor = 1;
+    FVector adjusted_goal = FMath::Lerp(m_LKP, targetLKP, distance_factor);
+
+    // Check if the goal position can be projected onto the NavMesh
+    UNavigationSystemV1* navSystem = Cast<UNavigationSystemV1>(World->GetNavigationSystem());
+    FNavLocation navLocation;
+    bool isTargetPositionNavigable = navSystem->ProjectPointToNavigation(adjusted_goal, navLocation);
+    if (isTargetPositionNavigable) {
+        return adjusted_goal;
+    }
+
+    // It optimal goal is not navigable, path directly to the player
+    isTargetPositionNavigable = navSystem->ProjectPointToNavigation(m_LKP, navLocation);
+    if (isTargetPositionNavigable) {
+        return m_LKP;
+    }
+
+    throw "Can't find valid navigable location";
 }
 
-void AiAgentGroupManager::DrawSphereOnRegisteredAgents(UWorld* World)
+bool AiAgentGroupManager::IsAgentInGroup(int aiAgent) {
+    return m_registeredAgents.Contains(aiAgent);
+}
+
+FVector AiAgentGroupManager::GetLKP()
 {
-    int agentCount = m_registeredAgents.Num();
-    for (int i = 0; i < agentCount; ++i)
-    {
-        ASDTAIController* aiAgent = m_registeredAgents[i];
-        if (aiAgent)
-        {
-            auto aiAgentPos = aiAgent->GetPawn()->GetActorLocation();
-            DrawDebugSphere(World, aiAgentPos, 25.0f, 32, FColor::Red);
-        }
-    }
+    return m_LKP;
 }
 
-bool AiAgentGroupManager::IsAgentInGroup(ASDTAIController* aiAgent) {
-    int agentCount = m_registeredAgents.Num();
-    for (int i = 0; i < agentCount; ++i)
-    {
-        ASDTAIController* currentAIAgent = m_registeredAgents[i];
-        if (currentAIAgent == aiAgent)
-        {
-            return true;
-        }
-    }
-
-    return false;
+void AiAgentGroupManager::UpdateLKP(FVector newLKP)
+{
+    m_LKP = newLKP;
 }

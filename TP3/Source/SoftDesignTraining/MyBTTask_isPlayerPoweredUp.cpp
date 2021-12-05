@@ -5,12 +5,14 @@
 #include "SDTUtils.h"
 #include "AiAgentGroupManager.h"
 #include "SoftDesignTrainingCharacter.h"
+#include "SDTAIController.h"
 
 EBTNodeResult::Type UMyBTTask_isPlayerPoweredUp::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 
     if (SDTUtils::IsPlayerPoweredUp(GetWorld()))
     {
+        ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
         AiAgentGroupManager* groupManager = AiAgentGroupManager::GetInstance();
         if (groupManager) {
             groupManager->UnregisterAll();

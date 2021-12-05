@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "AiAgentGroupManager.h"
+#include "SDTAIController.h"
 #include "MyBTTask_ExpectPlayerPoweredUp.generated.h"
 
 /**

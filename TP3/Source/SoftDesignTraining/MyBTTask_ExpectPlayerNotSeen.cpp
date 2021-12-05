@@ -11,44 +11,30 @@
 EBTNodeResult::Type UMyBTTask_ExpectPlayerNotSeen::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
-
-	bool playerSeen = aiController->IsPlayerSeen();
-
 	AiAgentGroupManager* groupManager = AiAgentGroupManager::GetInstance();
 
-	if (groupManager) {
+	bool playerSeen = aiController->IsPlayerSeen();
+	if (playerSeen)
+	{
+		// Join group if not already in it
+		groupManager->RegisterAIAgent(aiController->id);
 
-		if (groupManager->IsAgentInGroup(aiController)) {
-			playerSeen = groupManager->IsPlayerDetected();
-
-			if (playerSeen) {
-
-				FVector lkp = groupManager->GetAssignedPos(GetWorld(), aiController);
-				FVector actorLocation = aiController->GetPawn()->GetActorLocation();
-				ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-
-				if ((lkp - actorLocation).Size() < 50.0) {
-					groupManager->UnregisterAIAgent(aiController);
-					playerSeen = false;
-				}
-				else if ( playerCharacter && (playerCharacter->GetActorLocation() - actorLocation).Size() <= 250.0) {
-
-					OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetPlayerLocationKeyID(), playerCharacter->GetActorLocation());
-				}
-				else {
-					OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetPlayerLocationKeyID(), lkp);
-				}
-			}
+		// Notify group of current player postion
+		ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+		groupManager->UpdateLKP(playerCharacter->GetActorLocation());
+	}
+	else if (groupManager->IsAgentInGroup(aiController->id))
+	{
+		FVector lkp = groupManager->GetLKP();
+		if (FVector::Dist2D(lkp, aiController->GetPawn()->GetActorLocation()) > 2000.0f)
+		{
+			// Agent is too far from the group
+			groupManager->UnregisterAIAgent(aiController->id);
 		}
-		else {
-			if (playerSeen) {
-				groupManager->RegisterAIAgent(aiController);
-				ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-				if (playerCharacter) {
-					OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetPlayerLocationKeyID(), playerCharacter->GetActorLocation());
-				}
-			}
-
+		else
+		{
+			// The group has a sight on the player
+			playerSeen = true;
 		}
 	}
 

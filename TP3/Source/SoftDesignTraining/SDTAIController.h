@@ -93,7 +93,6 @@ public:
     uint8 GetTargetPosBBKeyID() const { return m_targetPosBBKeyID; }
     TargetLKPInfo GetCurrentTargetLKPInfo() const { return m_targetLkpInfo;}
     void InvalidateTargetLKPInfo() { m_targetLkpInfo.SetLKPState(TargetLKPInfo::ELKPState::LKPState_Invalid); }
-    void MoveToAssignedPos();
 
     void DisplayProfilerTimes(float deltaTime);
     uint8 GetTargetFleeLocationKeyID() const { return m_targetFleeLocationBBKeyID; }

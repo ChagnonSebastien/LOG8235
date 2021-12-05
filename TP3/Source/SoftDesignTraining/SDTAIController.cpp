@@ -93,25 +93,6 @@ void ASDTAIController::OnPossess(APawn* pawn)
     }
 }
 
-void ASDTAIController::MoveToAssignedPos()
-{
-    AiAgentGroupManager* aiAgentGroupManager = AiAgentGroupManager::GetInstance();
-    FVector assignedPos;
-    if (aiAgentGroupManager)
-    {
-        assignedPos = aiAgentGroupManager->GetAssignedPos(GetWorld(), this);
-    }
-    else
-    {
-        return;
-    }
-
-    MoveToLocation(assignedPos, 0.5f, false, true, true, NULL, false);
-    OnMoveToTarget();
-}
-
-
-
 /// ANCIEN CODE BELOW
 
 

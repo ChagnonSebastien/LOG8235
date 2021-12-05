@@ -16,7 +16,7 @@ EBTNodeResult::Type UBTTask_CustomMoveTo::ExecuteTask(UBehaviorTreeComponent& Ow
 
     FVector target = OwnerComp.GetBlackboardComponent()->GetValueAsVector(GetSelectedBlackboardKey());
 
-    if (FVector::Dist2D(target, aiController->GetCurrentTargetPosition()) < 100)
+    if (FVector::Dist2D(target, aiController->GetCurrentTargetPosition()) < 25.0f)
     {
         // Not enough change to justify a repathing
         return EBTNodeResult::Succeeded;
