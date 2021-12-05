@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "MyBTTask_Patrol.h"
+#include "BehaviorTree/Blackboard/BlackboardKeyType_Vector.h"
+
 
 EBTNodeResult::Type UMyBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
@@ -38,6 +38,7 @@ EBTNodeResult::Type UMyBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& OwnerC
 			{
 				aiController->MoveToLocation(foundCollectibles[index]->GetActorLocation(), 0.5f, false, true, true, NULL, false);
 				aiController->m_profiler.stopProfilingScope("COLLECT");
+				OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>(aiController->GetTargetCollectingLocationKeyID(), foundCollectibles[index]->GetActorLocation());
 				return EBTNodeResult::Succeeded;
 			}
 			else

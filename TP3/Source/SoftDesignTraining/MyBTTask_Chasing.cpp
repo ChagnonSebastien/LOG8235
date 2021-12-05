@@ -9,5 +9,6 @@ EBTNodeResult::Type UMyBTTask_Chasing::ExecuteTask(UBehaviorTreeComponent& Owner
         aiController->MoveToLocation(targetLocation, 0.5f, false, true, true, NULL, false);
         return EBTNodeResult::Succeeded;
     }
+    GEngine->AddOnScreenDebugMessage(0, 2, FColor::Green, TEXT("Not chasing"));
     return EBTNodeResult::Failed;
 }

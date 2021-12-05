@@ -1,8 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
+#include "SDTAIController.h"
 #include <iomanip>
 #include <sstream>
 
-#include "SDTAIController.h"
+
 #include "SoftDesignTraining.h"
 #include "SDTCollectible.h"
 #include "SDTFleeLocation.h"
@@ -86,6 +87,7 @@ void ASDTAIController::OnPossess(APawn* pawn)
             m_targetPosBBKeyID = m_blackboardComponent->GetKeyID("EnemyActor");
             m_targetFleeLocationBBKeyID = m_blackboardComponent->GetKeyID("FleeingLocation");
             m_targetPlayerLocationBBKeyID = m_blackboardComponent->GetKeyID("TargetLocation");
+            m_targetPCollectLocationBBKeyID = m_blackboardComponent->GetKeyID("CollectingLocation");
             //Set this agent in the BT
             m_blackboardComponent->SetValue<UBlackboardKeyType_Object>(m_blackboardComponent->GetKeyID("SelfActor"), pawn);
         }

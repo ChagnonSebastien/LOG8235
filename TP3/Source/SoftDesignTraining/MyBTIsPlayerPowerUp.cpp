@@ -19,10 +19,11 @@ void UMyBTIsPlayerPowerUp::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* No
     {
         if (SDTUtils::IsPlayerPoweredUp(GetWorld()))
         {
+            GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Player is powered up"));
             OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetPowerUpKeyID(), true);
         }
         else {
-            OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetPowerUpKeyID(), true);
+            OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetPowerUpKeyID(), false);
             aiController->m_profiler.stopProfilingScope("DETECT");
         }
     }

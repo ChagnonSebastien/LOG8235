@@ -97,6 +97,7 @@ public:
     void DisplayProfilerTimes(float deltaTime);
     uint8 GetTargetFleeLocationKeyID() const { return m_targetFleeLocationBBKeyID; }
     uint8 GetTargetPlayerLocationKeyID() const { return m_targetPlayerLocationBBKeyID; }
+    uint8 GetTargetCollectingLocationKeyID() const { return m_targetPCollectLocationBBKeyID; }
 
     PlayerInteractionBehavior GetPlayerInteractionBehavior() const { return m_PlayerInteractionBehavior; }
     bool IsPlayerSeen();
@@ -129,6 +130,7 @@ protected:
  
     uint8 m_targetFleeLocationBBKeyID;
     uint8 m_targetPlayerLocationBBKeyID;
+    uint8 m_targetPCollectLocationBBKeyID;
 
     ATimeBudget* budget;
     int id;
