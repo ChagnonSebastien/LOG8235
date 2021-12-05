@@ -42,6 +42,7 @@ void ATimeBudget::registerController(int id)
 
 bool ATimeBudget::requestAllocation(int id)
 {
+	return true;
 	amountData += 1;
 	int index = controllers.IndexOfByPredicate([id](int element){ return element == id; });
 	bool accept = index < 10;

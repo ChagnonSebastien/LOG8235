@@ -23,7 +23,7 @@ public:
     ELKPState       GetLKPState() const { return m_currentLKPState; }
     void            SetLKPState(ELKPState lkpState) { m_currentLKPState = lkpState; }
 
-    const FVector& GetLKPPos() const { return m_pos; }
+    const FVector&  GetLKPPos() const { return m_pos; }
     void            SetLKPPos(const FVector& lkpPos) { m_pos = lkpPos; }
 
     float           GetLastUpdatedTimeStamp() const { return m_lastUpdatedTimeStamp; }

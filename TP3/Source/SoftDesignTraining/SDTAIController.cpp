@@ -260,11 +260,15 @@ FVector ASDTAIController::FindBestFleeLocation()
                 bestFleeLocation = fleeLocation;
             }
 
-            DrawDebugString(GetWorld(), FVector(0.f, 0.f, 10.f), FString::SanitizeFloat(locationScore), fleeLocation, FColor::Red, 5.f, false);
         }
     }
 
     return bestFleeLocation->GetActorLocation();
+}
+
+FVector ASDTAIController::GetCurrentTargetPosition()
+{
+    return GetPathFollowingComponent()->GetCurrentTargetLocation();
 }
 
 void ASDTAIController::OnMoveToTarget()
@@ -408,8 +412,6 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
         debugString = "Collect";
         break;
     }
-
-    DrawDebugString(GetWorld(), FVector(0.f, 0.f, 5.f), debugString, GetPawn(), FColor::Orange, 0.f, false);
 
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
 }

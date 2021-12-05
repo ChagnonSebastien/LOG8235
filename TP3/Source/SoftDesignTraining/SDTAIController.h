@@ -85,6 +85,7 @@ public:
     void StopBehaviorTree(APawn* pawn);
     void MoveToRandomCollectible();
     FVector FindBestFleeLocation();
+    FVector GetCurrentTargetPosition();
 
     UBlackboardComponent* GetBlackBoardComponent() const { return m_blackboardComponent; }
     uint8 GetTargetPowerUpKeyID() const { return m_isTargetPowerUpKeyID; }

@@ -7,16 +7,12 @@ EBTNodeResult::Type UBTTask_RequestAllocation::ExecuteTask(UBehaviorTreeComponen
 {
     if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner()))
     {
-        if (aiController->AtJumpSegment)
-        {
-            //return EBTNodeResult::Failed;
-        }
         aiController->m_profiler.reset();
         aiController->m_profiler.startProfilingScope("UPDATE");
         if (aiController->budget->requestAllocation(aiController->id))
         {
+            return EBTNodeResult::Succeeded;
         }
-        return EBTNodeResult::Succeeded;
     }
 
     return EBTNodeResult::Failed;

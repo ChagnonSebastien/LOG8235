@@ -6,14 +6,24 @@
 
 EBTNodeResult::Type UBTTask_CustomMoveTo::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-    if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner()))
-    {
-        FVector target = OwnerComp.GetBlackboardComponent()->GetValueAsVector(GetSelectedBlackboardKey());
-        aiController->MoveToLocation(target, 0.5f, false, true, true, NULL, false);
-        aiController->OnMoveToTarget();
+    ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
 
+    if (aiController->AtJumpSegment)
+    {
+        // No repathing while jumping
         return EBTNodeResult::Succeeded;
     }
 
-    return EBTNodeResult::Failed;
+    FVector target = OwnerComp.GetBlackboardComponent()->GetValueAsVector(GetSelectedBlackboardKey());
+
+    if (FVector::Dist2D(target, aiController->GetCurrentTargetPosition()) < 100)
+    {
+        // Not enough change to justify a repathing
+        return EBTNodeResult::Succeeded;
+    }
+
+    aiController->MoveToLocation(target, 0.5f, false, true, true, NULL, false);
+    aiController->OnMoveToTarget();
+
+    return EBTNodeResult::Succeeded;
 }
