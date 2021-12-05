@@ -23,7 +23,6 @@ void UMyBTIsPlayerPowerUp::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* No
         }
         else {
             OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetPowerUpKeyID(), true);
-            aiController->m_profiler.stopProfilingScope("DETECT");
         }
     }
 }

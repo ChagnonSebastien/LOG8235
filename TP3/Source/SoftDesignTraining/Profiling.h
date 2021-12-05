@@ -35,7 +35,7 @@ namespace profiling {
 		/// <returns>The elapsed time (in seconds) from start to stop.</returns>
 		double getElapsedSeconds() {
 			std::chrono::duration<double> elapsed_seconds = m_endTime - m_startTime;
-			return elapsed_seconds.count();
+			return abs(elapsed_seconds.count()) < 1000 ? elapsed_seconds.count() : 0;
 		}
 
 		/// <summary>

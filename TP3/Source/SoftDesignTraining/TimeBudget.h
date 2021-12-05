@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Containers/Queue.h"
+#include "Containers/Array.h"
 #include "Containers/Set.h"
 #include "GameFramework/Actor.h"
 #include "TimeBudget.generated.h"
@@ -18,7 +18,7 @@ public:
 	ATimeBudget();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
-	float TargetTime = 0.05f;
+	float TargetTime = 0.5f;
 
 	void registerController(int id);
 	bool requestAllocation(int id);
@@ -33,7 +33,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
-	TQueue<int> controllers;
+	TArray<int> controllers;
 	TSet<int> activeControllers;
 
 	int amountData = 0;

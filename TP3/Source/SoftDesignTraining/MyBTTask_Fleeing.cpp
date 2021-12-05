@@ -7,7 +7,8 @@ EBTNodeResult::Type UMyBTTask_Fleeing::ExecuteTask(UBehaviorTreeComponent& Owner
 {
 	if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner())) {
 
-		aiController->MoveToBestFleeLocation();
+		FVector escapePosition = aiController->FindBestFleeLocation();
+		OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), escapePosition);
 		return EBTNodeResult::Succeeded;
 	}
 	return EBTNodeResult::Failed;

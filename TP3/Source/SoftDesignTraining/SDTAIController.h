@@ -72,9 +72,9 @@ protected:
     void MoveToPlayer();
     void PlayerInteractionLoSUpdate();
     void OnPlayerInteractionNoLosDone();
-    void OnMoveToTarget();
 
 public:
+    void OnMoveToTarget();
     virtual void BeginPlay() override;
     virtual void Tick(float deltaTime) override;
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
@@ -84,7 +84,7 @@ public:
     void StartBehaviorTree(APawn* pawn);
     void StopBehaviorTree(APawn* pawn);
     void MoveToRandomCollectible();
-    void MoveToBestFleeLocation();
+    FVector FindBestFleeLocation();
 
     UBlackboardComponent* GetBlackBoardComponent() const { return m_blackboardComponent; }
     uint8 GetTargetPowerUpKeyID() const { return m_isTargetPowerUpKeyID; }
@@ -101,6 +101,8 @@ public:
     PlayerInteractionBehavior GetPlayerInteractionBehavior() const { return m_PlayerInteractionBehavior; }
     bool IsPlayerSeen();
 
+    ATimeBudget* budget;
+    int id;
 
 protected:
     virtual void OnPossess(APawn* pawn) override;
@@ -130,6 +132,4 @@ protected:
     uint8 m_targetFleeLocationBBKeyID;
     uint8 m_targetPlayerLocationBBKeyID;
 
-    ATimeBudget* budget;
-    int id;
 };

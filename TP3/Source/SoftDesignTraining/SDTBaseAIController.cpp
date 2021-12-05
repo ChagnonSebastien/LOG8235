@@ -15,17 +15,6 @@ ASDTBaseAIController::ASDTBaseAIController(const FObjectInitializer& ObjectIniti
 void ASDTBaseAIController::Tick(float deltaTime)
 {
     Super::Tick(deltaTime);
-
-  /*  UpdatePlayerInteraction(deltaTime);
-
-    if (m_ReachedTarget)
-    {
-        GoToBestTarget(deltaTime);
-    }
-    else
-    {
-        ShowNavigationPath();
-    }*/
 }
 
 

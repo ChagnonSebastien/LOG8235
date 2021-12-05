@@ -18,24 +18,19 @@ void UMyBTIsPlayerSeen::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeM
 {
     if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner()))
     {
-        aiController->m_profiler.reset();
-        aiController->m_profiler.startProfilingScope("DETECT");
         ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
         if (!playerCharacter) {
             OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenKeyID(), false);
-            aiController->m_profiler.stopProfilingScope("DETECT");
             return;
         }
 
         if ((aiController->GetPawn()->GetActorLocation() - playerCharacter->GetActorLocation()).Size() < 500.f) {
             OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenKeyID(), true);
-            GEngine->AddOnScreenDebugMessage(0, 2, FColor::Green, TEXT("Player is seen"));
         }
 
         else
         {
             OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Bool>(aiController->GetTargetSeenKeyID(), false);
-            aiController->m_profiler.stopProfilingScope("DETECT");
         }
     }
 }

@@ -40,6 +40,7 @@ void ASDTAIController::BeginPlay()
     budget = (ATimeBudget*)foundBudgets.Pop();
     budget->registerController(id);
     this->AddTickPrerequisiteActor(budget);
+    SetTickGroup(ETickingGroup::TG_PrePhysics);
 }
 
 void ASDTAIController::Tick(float deltaTime)
@@ -119,9 +120,7 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     switch (m_PlayerInteractionBehavior)
     {
     case PlayerInteractionBehavior_Collect:
-        m_profiler.startProfilingScope("COLLECT");
         MoveToRandomCollectible();
-        m_profiler.stopProfilingScope("COLLECT");
         break;
 
     case PlayerInteractionBehavior_Chase:
@@ -131,13 +130,9 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
         break;
 
     case PlayerInteractionBehavior_Flee:
-        m_profiler.startProfilingScope("FLEE");
-        MoveToBestFleeLocation();
-        m_profiler.stopProfilingScope("FLEE");
         break;
     }
 
-    m_profiler.stopProfilingScope("UPDATE");
 }
 
 void ASDTAIController::MoveToRandomCollectible()
@@ -234,14 +229,14 @@ void ASDTAIController::OnPlayerInteractionNoLosDone()
     }
 }
 
-void ASDTAIController::MoveToBestFleeLocation()
+FVector ASDTAIController::FindBestFleeLocation()
 {
     float bestLocationScore = 0.f;
     ASDTFleeLocation* bestFleeLocation = nullptr;
 
     ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
     if (!playerCharacter)
-        return;
+        throw "This method should not be called in the first place if the player is not playing.";
 
     for (TActorIterator<ASDTFleeLocation> actorIterator(GetWorld(), ASDTFleeLocation::StaticClass()); actorIterator; ++actorIterator)
     {
@@ -269,11 +264,7 @@ void ASDTAIController::MoveToBestFleeLocation()
         }
     }
 
-    if (bestFleeLocation)
-    {
-        MoveToLocation(bestFleeLocation->GetActorLocation(), 0.5f, false, true, false, NULL, false);
-        OnMoveToTarget();
-    }
+    return bestFleeLocation->GetActorLocation();
 }
 
 void ASDTAIController::OnMoveToTarget()
@@ -326,9 +317,6 @@ void ASDTAIController::ShowNavigationPath()
             }
         }
     }
-
-    m_profiler.stopProfilingScope("UPDATE");
-    DisplayProfilerTimes(0.01);
 }
 
 bool ASDTAIController::IsPlayerSeen()
@@ -372,8 +360,6 @@ bool ASDTAIController::IsPlayerSeen()
 
 void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
 {
-    m_profiler.reset();
-    m_profiler.startProfilingScope("UPDATE");
 
     //finish jump before updating AI state
     if (AtJumpSegment)
@@ -387,7 +373,6 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     if (!playerCharacter)
         return;
 
-    m_profiler.startProfilingScope("DETECT");
 
     FVector detectionStartLocation = selfPawn->GetActorLocation() + selfPawn->GetActorForwardVector() * m_DetectionCapsuleForwardStartingOffset;
     FVector detectionEndLocation = detectionStartLocation + selfPawn->GetActorForwardVector() * m_DetectionCapsuleHalfLength * 2;
@@ -401,7 +386,6 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     FHitResult detectionHit;
     GetHightestPriorityDetectionHit(allDetectionHits, detectionHit);
 
-    m_profiler.stopProfilingScope("DETECT");
 
     UpdatePlayerInteractionBehavior(detectionHit, deltaTime);
 
