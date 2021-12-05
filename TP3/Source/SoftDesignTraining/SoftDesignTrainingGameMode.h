@@ -12,6 +12,7 @@ public:
 	ASoftDesignTrainingGameMode();
 
     virtual void StartPlay() override;
+	virtual void Tick(float deltaTime) override;
 };
 
 

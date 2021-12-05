@@ -24,3 +24,8 @@ void ASoftDesignTrainingGameMode::StartPlay()
 
     GetWorld()->Exec(GetWorld(), TEXT("stat fps"));
 }
+
+void ASoftDesignTrainingGameMode::Tick(float deltaTime)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Purple, FString::Printf(TEXT("Game Tick: %f"), deltaTime));
+}

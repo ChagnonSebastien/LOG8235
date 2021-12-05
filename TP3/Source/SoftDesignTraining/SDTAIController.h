@@ -16,6 +16,9 @@ class SOFTDESIGNTRAINING_API ASDTAIController : public ASDTBaseAIController
 
 public:
     ASDTAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+    void BeginPlay() override;
+    void OnPossess(APawn* const pawn) override;
+    class UBlackboardComponent* get_blackboard() const;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float m_DetectionCapsuleHalfLength = 500.f;
@@ -44,6 +47,15 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
     bool Landing = false;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+    class UBehaviorTreeComponent* behavior_tree_component;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+    class UBehaviorTree* btree;
+
+private:
+    class UBlackboardComponent* blackboard;
+
 protected:
 
     enum PlayerInteractionBehavior
@@ -62,9 +74,9 @@ protected:
     void MoveToBestFleeLocation();
     void PlayerInteractionLoSUpdate();
     void OnPlayerInteractionNoLosDone();
-    void OnMoveToTarget();
 
 public:
+    void OnMoveToTarget();
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
     void RotateTowards(const FVector& targetLocation);
     void SetActorLocation(const FVector& targetLocation);

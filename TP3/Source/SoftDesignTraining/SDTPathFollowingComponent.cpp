@@ -26,8 +26,6 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
 
     const FNavPathPoint& SegmentStart = points[MoveSegmentStartIndex];
 
-    DrawDebugString(GetWorld(), FVector(0.f, 0.f, 10.f), FString::SanitizeFloat(m_JumpProgressRatio), GetOwner()->GetParentActor(), FColor::Red, 0.f, false);
-
     if (SDTUtils::HasJumpFlag(SegmentStart))
     {
         ASDTAIController* controller = Cast<ASDTAIController>(GetOwner());
@@ -47,8 +45,6 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
                 const bool bNotFollowingLastSegment = (MoveSegmentStartIndex < LastSegmentStartIndex);
 
                 MovementComp->RequestDirectMove((nextLocation - controller->GetPawn()->GetActorLocation()) * controller->JumpSpeed, bNotFollowingLastSegment);
-
-                DrawDebugSphere(GetWorld(), nextLocation, 10.f, 8, FColor::Red, false, 5.f);
             }
             else
             {

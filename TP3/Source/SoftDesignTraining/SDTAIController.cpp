@@ -1,6 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SDTAIController.h"
+#include "BehaviorTree/BehaviorTreeComponent.h"
+#include "BehaviorTree/BehaviorTree.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "UObject/ConstructorHelpers.h"
+#include "SoftDesignTrainingCharacter.h"
 #include "SoftDesignTraining.h"
 #include "SDTCollectible.h"
 #include "SDTFleeLocation.h"
@@ -14,7 +19,30 @@
 ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer.SetDefaultSubobjectClass<USDTPathFollowingComponent>(TEXT("PathFollowingComponent")))
 {
+    static ConstructorHelpers::FObjectFinder<UBehaviorTree> obj(TEXT("BehaviorTree'/Game/Blueprint/BehaviorTree.BehaviorTree'"));
+    if (obj.Succeeded())
+    {
+        btree = obj.Object;
+    }
+    behavior_tree_component = ObjectInitializer.CreateDefaultSubobject<UBehaviorTreeComponent>(this, TEXT("BehaviorComp"));
+    blackboard = ObjectInitializer.CreateDefaultSubobject<UBlackboardComponent>(this, TEXT("BlackboardComp"));
     m_PlayerInteractionBehavior = PlayerInteractionBehavior_Collect;
+}
+
+void ASDTAIController::BeginPlay()
+{
+    Super::BeginPlay();
+    RunBehaviorTree(btree);
+    behavior_tree_component->StartTree(*btree);
+}
+
+void ASDTAIController::OnPossess(APawn* const pawn)
+{
+    Super::OnPossess(pawn);
+    if (blackboard)
+    {
+        blackboard->InitializeBlackboard(*btree->BlackboardAsset);
+    }
 }
 
 void ASDTAIController::GoToBestTarget(float deltaTime)
@@ -329,6 +357,11 @@ ASDTAIController::PlayerInteractionBehavior ASDTAIController::GetCurrentPlayerIn
 
         return SDTUtils::IsPlayerPoweredUp(GetWorld()) ? PlayerInteractionBehavior_Flee : PlayerInteractionBehavior_Chase;
     }
+}
+
+UBlackboardComponent* ASDTAIController::get_blackboard() const
+{
+    return blackboard;
 }
 
 void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit)
