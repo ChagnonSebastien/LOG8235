@@ -52,6 +52,18 @@ void ATimeBudget::Tick(float DeltaTime)
 	}
 
 	GEngine->AddOnScreenDebugMessage(-1, DeltaTime, FColor::Blue, FString::Printf(TEXT("Total Time: %f seconds."), totalTime));
+
+	if (totalTime < TargetTime)
+	{
+		if (m_acceptAmountPerFrame < controllers.Num())
+		{
+			m_acceptAmountPerFrame += 1;
+		}
+	}
+	else
+	{
+		m_acceptAmountPerFrame -= 1;
+	}
 }
 
 void ATimeBudget::registerController(int id)
@@ -61,7 +73,6 @@ void ATimeBudget::registerController(int id)
 
 bool ATimeBudget::requestAllocation(int id)
 {
-	amountData += 1;
 	int index = controllers.IndexOfByPredicate([id](int element){ return element == id; });
 	bool accept = index < controllers.Num();
 	if (accept) {

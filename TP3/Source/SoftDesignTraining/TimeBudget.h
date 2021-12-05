@@ -19,7 +19,10 @@ public:
 	ATimeBudget();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
-	float TargetTime = 0.5f;
+	float TargetTime = 0.01f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
+	int m_acceptAmountPerFrame = 10;
 
 	void registerController(int id);
 	bool requestAllocation(int id);
@@ -37,8 +40,5 @@ private:
 	TArray<int> controllers;
 	TSet<int> activeControllers;
 	TMap<FString, TArray<double>> timeLog;
-
-	int amountData = 0;
-	float computeTime = 0;
 
 };
