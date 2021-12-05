@@ -11,6 +11,8 @@
 EBTNodeResult::Type UMyBTTask_ExpectPlayerNotSeen::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
+	aiController->m_profiler.startProfilingScope("DETECT");
+
 	AiAgentGroupManager* groupManager = AiAgentGroupManager::GetInstance();
 
 	bool playerSeen = aiController->IsPlayerSeen();
@@ -37,6 +39,9 @@ EBTNodeResult::Type UMyBTTask_ExpectPlayerNotSeen::ExecuteTask(UBehaviorTreeComp
 			playerSeen = true;
 		}
 	}
+
+	aiController->m_profiler.stopProfilingScope("DETECT");
+	aiController->budget->LogExecutionTime(FString(TEXT("DETECT")), aiController->m_profiler.getScopeElapsedSeconds("DETECT"));
 
 	return playerSeen ? EBTNodeResult::Failed : EBTNodeResult::Succeeded;
 

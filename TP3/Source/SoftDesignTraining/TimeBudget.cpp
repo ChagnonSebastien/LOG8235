@@ -15,6 +15,10 @@ ATimeBudget::ATimeBudget()
 void ATimeBudget::BeginPlay()
 {
 	Super::BeginPlay();
+	timeLog.Add(FString(TEXT("UPDATE")), TArray<double>());
+	timeLog.Add(FString(TEXT("DETECT")), TArray<double>());
+	timeLog.Add(FString(TEXT("FLEE")), TArray<double>());
+	timeLog.Add(FString(TEXT("COLLECT")), TArray<double>());
 }
 
 // Called every frame
@@ -30,7 +34,24 @@ void ATimeBudget::Tick(float DeltaTime)
 		}
 	}
 	activeControllers.Empty();
-	amountData = 0;
+
+	double totalTime = 0;
+	TArray<FString> keys;
+	timeLog.GetKeys(keys);
+	for (auto key : keys) {
+		TArray<double>* target = timeLog.Find(key);
+
+		double totalScopeTime = 0;
+		for (auto log : *target) {
+			totalScopeTime += log;
+		}
+
+		totalTime += totalScopeTime;
+		GEngine->AddOnScreenDebugMessage(-1, DeltaTime, FColor::Blue, FString::Printf(TEXT("%s ran %d times and took %f seconds."), *key, target->Num(), totalScopeTime));
+		target->Empty();
+	}
+
+	GEngine->AddOnScreenDebugMessage(-1, DeltaTime, FColor::Blue, FString::Printf(TEXT("Total Time: %f seconds."), totalTime));
 }
 
 void ATimeBudget::registerController(int id)
@@ -49,8 +70,9 @@ bool ATimeBudget::requestAllocation(int id)
 	return accept;
 }
 
-void ATimeBudget::notifyTime(float time)
+void ATimeBudget::LogExecutionTime(FString scope, double time)
 {
-	computeTime += time;
+	TArray<double>* target = timeLog.Find(scope);
+	target->Add(time);
 }
 

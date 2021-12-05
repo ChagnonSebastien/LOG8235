@@ -5,6 +5,8 @@
 EBTNodeResult::Type UMyBTTask_Chasing::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
     ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
+    aiController->m_profiler.startProfilingScope("DETECT");
+
     AiAgentGroupManager* groupManager = AiAgentGroupManager::GetInstance();
 
     try {
@@ -15,6 +17,9 @@ EBTNodeResult::Type UMyBTTask_Chasing::ExecuteTask(UBehaviorTreeComponent& Owner
         // Ignore. Keep going to last valid target.
     }
     DrawDebugSphere(aiController->GetWorld(), aiController->GetPawn()->GetActorLocation(), 25.0f, 32, FColor::Red, false, 0.05);
+
+    aiController->m_profiler.stopProfilingScope("DETECT");
+    aiController->budget->LogExecutionTime(FString(TEXT("DETECT")), aiController->m_profiler.getScopeElapsedSeconds("DETECT"));
 
     return EBTNodeResult::Succeeded;
 }

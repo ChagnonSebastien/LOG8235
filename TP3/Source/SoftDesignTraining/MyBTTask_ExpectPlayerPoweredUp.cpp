@@ -8,12 +8,14 @@
 
 EBTNodeResult::Type UMyBTTask_ExpectPlayerPoweredUp::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
+    ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
+    aiController->m_profiler.startProfilingScope("DETECT");
 
-    if (SDTUtils::IsPlayerPoweredUp(GetWorld()))
-    {
-        return EBTNodeResult::Succeeded;
-    }
+    bool poweredUp = SDTUtils::IsPlayerPoweredUp(GetWorld());
 
-    return EBTNodeResult::Failed;
+    aiController->m_profiler.stopProfilingScope("DETECT");
+    aiController->budget->LogExecutionTime(FString(TEXT("DETECT")), aiController->m_profiler.getScopeElapsedSeconds("DETECT"));
+
+    return poweredUp ? EBTNodeResult::Succeeded : EBTNodeResult::Failed;
 }
 

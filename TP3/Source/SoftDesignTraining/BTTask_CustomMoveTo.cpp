@@ -7,23 +7,24 @@
 EBTNodeResult::Type UBTTask_CustomMoveTo::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
     ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
+    aiController->m_profiler.startProfilingScope("UPDATE");
 
-    if (aiController->AtJumpSegment)
+    // No repathing while jumping
+    if (!aiController->AtJumpSegment)
     {
-        // No repathing while jumping
-        return EBTNodeResult::Succeeded;
+        FVector target = OwnerComp.GetBlackboardComponent()->GetValueAsVector(GetSelectedBlackboardKey());
+
+        // Verify if not enough change to justify a repathing
+        float target_move_amount = FVector::Dist2D(target, aiController->GetCurrentTargetPosition());
+        if (target_move_amount > 25.0f)
+        {
+            aiController->MoveToLocation(target, 0.5f, false, true, true, NULL, false);
+            aiController->OnMoveToTarget();
+        }
     }
 
-    FVector target = OwnerComp.GetBlackboardComponent()->GetValueAsVector(GetSelectedBlackboardKey());
-
-    if (FVector::Dist2D(target, aiController->GetCurrentTargetPosition()) < 25.0f)
-    {
-        // Not enough change to justify a repathing
-        return EBTNodeResult::Succeeded;
-    }
-
-    aiController->MoveToLocation(target, 0.5f, false, true, true, NULL, false);
-    aiController->OnMoveToTarget();
-
+    aiController->m_profiler.stopProfilingScope("UPDATE");
+    aiController->budget->LogExecutionTime(FString(TEXT("UPDATE")), aiController->m_profiler.getScopeElapsedSeconds("UPDATE"));
+    
     return EBTNodeResult::Succeeded;
 }

@@ -31,21 +31,27 @@ ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
 void ASDTAIController::BeginPlay()
 {
     Super::BeginPlay();
-
-    // Budget Allocation Setup
     id = rand();
 
+    // Budget Allocation Setup
     TArray<AActor*> foundBudgets;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), BudgetClass, foundBudgets);
     budget = (ATimeBudget*)foundBudgets.Pop();
     budget->registerController(id);
+
+
+    // Order: budget reset -> profiler_reset -> Behavior
     this->AddTickPrerequisiteActor(budget);
-    SetTickGroup(ETickingGroup::TG_PrePhysics);
+    m_behaviorTreeComponent->AddTickPrerequisiteActor(budget);
+    m_blackboardComponent->AddTickPrerequisiteActor(budget);
+    m_behaviorTreeComponent->AddTickPrerequisiteActor(this);
+    m_blackboardComponent->AddTickPrerequisiteActor(this);
 }
 
 void ASDTAIController::Tick(float deltaTime)
 {
     DisplayProfilerTimes(deltaTime);
+    m_profiler.reset();
 }
 
 void ASDTAIController::StartBehaviorTree(APawn* pawn)

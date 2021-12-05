@@ -20,6 +20,7 @@ namespace profiling {
 		/// </summary>
 		void start() {
 			m_startTime = std::chrono::system_clock::now();
+			m_endTime = std::chrono::system_clock::now();
 		}
 
 		/// <summary>
@@ -27,6 +28,7 @@ namespace profiling {
 		/// </summary>
 		void stop() {
 			m_endTime = std::chrono::system_clock::now();
+			m_totalTime += getElapsedSeconds();
 		}
 
 		/// <summary>
@@ -39,16 +41,26 @@ namespace profiling {
 		}
 
 		/// <summary>
+		/// Gets the elapsed time (in seconds) from start to stop.
+		/// </summary>
+		/// <returns>The elapsed time (in seconds) from start to stop.</returns>
+		double getTotalTime() {
+			return m_totalTime;
+		}
+
+		/// <summary>
 		/// Resets the chronometer.
 		/// </summary>
 		void reset() {
 			m_startTime = std::chrono::time_point<std::chrono::system_clock>();
 			m_endTime = std::chrono::time_point<std::chrono::system_clock>();
+			m_totalTime = 0;
 		}
 
 	private:
 		std::chrono::time_point<std::chrono::system_clock> m_startTime;
 		std::chrono::time_point<std::chrono::system_clock> m_endTime;
+		double m_totalTime;
 	};
 
 	/// <summary>

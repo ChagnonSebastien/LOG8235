@@ -9,7 +9,6 @@ EBTNodeResult::Type UBTTask_ReleaseTimeAllocation::ExecuteTask(UBehaviorTreeComp
     if (ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner()))
     {
         aiController->m_profiler.stopProfilingScope("UPDATE");
-        aiController->budget->notifyTime(aiController->m_profiler.getScopeElapsedSeconds("UPDATE"));
     }
 
     return EBTNodeResult::Succeeded;

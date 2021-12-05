@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Containers/Array.h"
 #include "Containers/Set.h"
+#include "Containers/Map.h"
 #include "GameFramework/Actor.h"
 #include "TimeBudget.generated.h"
 
@@ -22,7 +23,7 @@ public:
 
 	void registerController(int id);
 	bool requestAllocation(int id);
-	void notifyTime(float time);
+	void LogExecutionTime(FString scope, double time);
 
 protected:
 	// Called when the game starts or when spawned
@@ -35,6 +36,7 @@ public:
 private:
 	TArray<int> controllers;
 	TSet<int> activeControllers;
+	TMap<FString, TArray<double>> timeLog;
 
 	int amountData = 0;
 	float computeTime = 0;
