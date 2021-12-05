@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MyBTTask_Fleeing.h"
+#include "BTTask_Fleeing.h"
 
-EBTNodeResult::Type UMyBTTask_Fleeing::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UBTTask_Fleeing::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
 	aiController->m_profiler.startProfilingScope("FLEE");

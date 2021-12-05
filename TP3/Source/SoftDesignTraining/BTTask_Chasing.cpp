@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-#include "MyBTTask_Chasing.h"
+#include "BTTask_Chasing.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Vector.h"
 
-EBTNodeResult::Type UMyBTTask_Chasing::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UBTTask_Chasing::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
     ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
     aiController->m_profiler.startProfilingScope("DETECT");

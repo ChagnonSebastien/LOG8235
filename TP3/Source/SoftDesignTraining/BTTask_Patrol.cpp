@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MyBTTask_Patrol.h"
+#include "BTTask_Patrol.h"
 
-EBTNodeResult::Type UMyBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
 	aiController->m_profiler.startProfilingScope("COLLECT");

@@ -4,15 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
-#include "BehaviorTree/Blackboard/BlackboardKeyType_Vector.h"
+#include "AiAgentGroupManager.h"
 #include "SDTAIController.h"
-#include "MyBTTask_ExpectPlayerNotSeen.generated.h"
+#include "BTTask_ExpectPlayerPoweredUp.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SOFTDESIGNTRAINING_API UMyBTTask_ExpectPlayerNotSeen : public UBTTask_BlackboardBase
+class SOFTDESIGNTRAINING_API UBTTask_ExpectPlayerPoweredUp : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;

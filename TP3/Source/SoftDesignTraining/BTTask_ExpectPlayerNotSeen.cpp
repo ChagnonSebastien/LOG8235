@@ -1,14 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MyBTTask_ExpectPlayerNotSeen.h"
+#include "BTTask_ExpectPlayerNotSeen.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Bool.h"
 #include "SoftDesignTraining.h"
 #include "SDTUtils.h"
 #include "AiAgentGroupManager.h"
 #include "SoftDesignTrainingCharacter.h"
 
-EBTNodeResult::Type UMyBTTask_ExpectPlayerNotSeen::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UBTTask_ExpectPlayerNotSeen::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
 	aiController->m_profiler.startProfilingScope("DETECT");

@@ -15,13 +15,13 @@
 #include "EngineUtils.h"
 #include "CoreMinimal.h"
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
-#include "MyBTTask_Fleeing.generated.h"
+#include "BTTask_Fleeing.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SOFTDESIGNTRAINING_API UMyBTTask_Fleeing : public UBTTask_BlackboardBase
+class SOFTDESIGNTRAINING_API UBTTask_Fleeing : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
