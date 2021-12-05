@@ -440,6 +440,8 @@ bool ASDTAIController::HasLoSOnHit(const FHitResult& hit)
 void ASDTAIController::AIStateInterrupted()
 {
     StopMovement();
+    AtJumpSegment = false;
+    Landing = true;
     m_ReachedTarget = true;
 }
 
