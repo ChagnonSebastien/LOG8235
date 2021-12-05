@@ -12,13 +12,11 @@
 
 UBTTask_FindClosestCollectible::UBTTask_FindClosestCollectible(FObjectInitializer const& ObjectInitializer)
 {
-    NodeName = TEXT("Find Random Collectible");
+    NodeName = TEXT("Find Closest Collectible");
 }
 
 EBTNodeResult::Type UBTTask_FindClosestCollectible::ExecuteTask(UBehaviorTreeComponent& owner_comp, uint8* node_memory)
 {
-    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Purple, FString::Printf(TEXT("Behavior Tick")));
-
     auto const cont = Cast<ASDTAIController>(owner_comp.GetAIOwner());
     auto const npc = cont->GetPawn();
 
@@ -27,30 +25,35 @@ EBTNodeResult::Type UBTTask_FindClosestCollectible::ExecuteTask(UBehaviorTreeCom
 
     TArray<AActor*> foundCollectibles;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASDTCollectible::StaticClass(), foundCollectibles);
-
-    while (foundCollectibles.Num() != 0)
+    
+    for (AActor* actor: foundCollectibles)
     {
-        int index = FMath::RandRange(0, foundCollectibles.Num() - 1);
+        ASDTCollectible* collectibleActor = Cast<ASDTCollectible>(actor);
+        if (collectibleActor->IsOnCooldown()) continue;
 
-        ASDTCollectible* collectibleActor = Cast<ASDTCollectible>(foundCollectibles[index]);
-        if (!collectibleActor)
+        float distance = FVector::Dist2D(npc->GetActorLocation(), actor->GetActorLocation());
+        if (distance < closestSqrCollectibleDistance)
         {
-            FinishLatentTask(owner_comp, EBTNodeResult::Failed);
-            return EBTNodeResult::Failed;
-        }
-
-        if (!collectibleActor->IsOnCooldown())
-        {
-            cont->get_blackboard()->SetValueAsVector(GetSelectedBlackboardKey(), collectibleActor->GetActorLocation());
-            FinishLatentTask(owner_comp, EBTNodeResult::Succeeded);
-            return EBTNodeResult::Succeeded;
-        }
-        else
-        {
-            foundCollectibles.RemoveAt(index);
+            closestSqrCollectibleDistance = distance;
+            closestCollectible = collectibleActor;
         }
     }
 
-    FinishLatentTask(owner_comp, EBTNodeResult::Failed);
-    return EBTNodeResult::Failed;
+    if (closestCollectible == nullptr)
+    {
+        FinishLatentTask(owner_comp, EBTNodeResult::Failed);
+        return EBTNodeResult::Failed;
+    }
+
+    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Purple, FString::Printf(TEXT("Behavior Tick")));
+    FVector prevTarget = cont->get_blackboard()->GetValueAsVector(GetSelectedBlackboardKey());
+    if (FVector::Dist2D(prevTarget, closestCollectible->GetActorLocation()) > 100 || FVector::Dist2D(prevTarget, npc->GetActorLocation()) < 100)
+    {
+        cont->get_blackboard()->SetValueAsVector(GetSelectedBlackboardKey(), closestCollectible->GetActorLocation());
+        cont->MoveToLocation(closestCollectible->GetActorLocation(), 0.5f, false, true, true, NULL, false);
+        cont->OnMoveToTarget();
+    }
+
+    FinishLatentTask(owner_comp, EBTNodeResult::Succeeded);
+    return EBTNodeResult::Succeeded;
 }
