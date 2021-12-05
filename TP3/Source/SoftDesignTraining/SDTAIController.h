@@ -52,46 +52,38 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     TSubclassOf<ATimeBudget> BudgetClass;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
+    UBehaviorTreeComponent* m_behaviorTreeComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
+    UBlackboardComponent* m_blackboardComponent;
+
+    int id;
     profiling::Profiler m_profiler;
+    ATimeBudget* budget;
     
 
 protected:
+    virtual void OnPossess(APawn* pawn) override;
 
     void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit);
     bool HasLoSOnHit(const FHitResult& hit);
 
 public:
     void OnMoveToTarget();
+
     virtual void BeginPlay() override;
     virtual void Tick(float deltaTime) override;
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
+
     void AIStateInterrupted();
     void StartBehaviorTree(APawn* pawn);
     FVector GetCurrentTargetPosition();
-    
-    UBlackboardComponent* GetBlackBoardComponent() const { return m_blackboardComponent; }
-
     void DisplayProfilerTimes(float deltaTime);
-
     bool IsPlayerSeen();
 
-    ATimeBudget* budget;
-    int id;
 
-protected:
-    virtual void OnPossess(APawn* pawn) override;
 private:
     virtual void ShowNavigationPath() override;
-
-
-protected:
-    FVector m_JumpTarget;
-    FRotator m_ObstacleAvoidanceRotation;
-    FTimerHandle m_PlayerInteractionNoLosTimer;
-
-    UPROPERTY(transient)
-    UBehaviorTreeComponent* m_behaviorTreeComponent;
-    UPROPERTY(transient)
-    UBlackboardComponent* m_blackboardComponent;
 
 };
