@@ -41,9 +41,9 @@ namespace profiling {
 		}
 
 		/// <summary>
-		/// Gets the elapsed time (in seconds) from start to stop.
+		/// Gets the total elapsed time (in seconds) since last reset.
 		/// </summary>
-		/// <returns>The elapsed time (in seconds) from start to stop.</returns>
+		/// <returns>Gets the total elapsed time (in seconds) since last reset.</returns>
 		double getTotalTime() {
 			return m_totalTime;
 		}
@@ -58,8 +58,19 @@ namespace profiling {
 		}
 
 	private:
+		/// <summary>
+		/// The time point when the chronometer is started.
+		/// </summary>
 		std::chrono::time_point<std::chrono::system_clock> m_startTime;
+		
+		/// <summary>
+		/// The time point when the chronometer is stopped.
+		/// </summary>
 		std::chrono::time_point<std::chrono::system_clock> m_endTime;
+		
+		/// <summary>
+		/// The total elapsed time (in seconds) since last chronometer reset.
+		/// </summary>
 		double m_totalTime;
 	};
 
