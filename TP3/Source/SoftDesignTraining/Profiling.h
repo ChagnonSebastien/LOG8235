@@ -111,6 +111,9 @@ namespace profiling {
 			}
 		}
 
+		/// <summary>
+		/// The scopes to profile.
+		/// </summary>
 		std::vector<std::string> scopes = {
 				"UPDATE",
 				"DETECT",
@@ -119,6 +122,9 @@ namespace profiling {
 		};
 
 	private:
+		/// <summary>
+		/// The chronometers associated with the scopes to profile.
+		/// </summary>
 		std::map<std::string, Chronometer> m_scopeChronometers;
 	};
 

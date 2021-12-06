@@ -17,6 +17,10 @@
 #include "SDTUtils.h"
 #include "EngineUtils.h"
 
+/// <summary>
+/// Constructs an ASDTAIController.
+/// </summary>
+/// <param name="ObjectInitializer">The ObjectInitializer from which the ASDTAIController is constructed.</param>
 ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer.SetDefaultSubobjectClass<USDTPathFollowingComponent>(TEXT("PathFollowingComponent")))
 {
@@ -24,6 +28,9 @@ ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     m_blackboardComponent = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackBoardComponent"));
 }
 
+/// <summary>
+/// Callback when begining play to setup budget management and profiling.
+/// </summary>
 void ASDTAIController::BeginPlay()
 {
     Super::BeginPlay();
@@ -35,7 +42,6 @@ void ASDTAIController::BeginPlay()
     budget = (ATimeBudget*)foundBudgets.Pop();
     budget->registerController(id);
 
-
     // Order: budget reset -> profiler_reset -> Behavior
     this->AddTickPrerequisiteActor(budget);
     m_behaviorTreeComponent->AddTickPrerequisiteActor(budget);
@@ -44,6 +50,10 @@ void ASDTAIController::BeginPlay()
     m_blackboardComponent->AddTickPrerequisiteActor(this);
 }
 
+/// <summary>
+/// Callback that is triggered each frame.
+/// </summary>
+/// <param name="deltaTime">The elapsed time for the frame.</param>
 void ASDTAIController::Tick(float deltaTime)
 {
     DisplayProfilerTimes(deltaTime);
@@ -53,6 +63,7 @@ void ASDTAIController::Tick(float deltaTime)
 /// <summary>
 /// Displays elapsed time for profiled scopes above the agent.
 /// </summary>
+/// <param name="deltaTime">The elapsed time for the frame.</param>
 void ASDTAIController::DisplayProfilerTimes(float deltaTime) {
     auto numScopes = m_profiler.scopes.size();
     for (int i = 0; i < numScopes; ++i) {
@@ -64,11 +75,14 @@ void ASDTAIController::DisplayProfilerTimes(float deltaTime) {
     }
 }
 
+/// <summary>
+/// Starts the agent's behavior tree.
+/// </summary>
+/// <param name="pawn">The agent's pawn.</param>
 void ASDTAIController::StartBehaviorTree(APawn* pawn)
 {
     if (ASoftDesignTrainingCharacter* aiBaseCharacter = Cast<ASoftDesignTrainingCharacter>(pawn))
     {
-
         if (aiBaseCharacter->GetBehaviorTree())
         {
             m_behaviorTreeComponent->StartTree(*aiBaseCharacter->GetBehaviorTree());
@@ -76,6 +90,10 @@ void ASDTAIController::StartBehaviorTree(APawn* pawn)
     }
 }
 
+/// <summary>
+/// Callback to initialize the agent's blackboard.
+/// </summary>
+/// <param name="pawn">The agent's pawn.</param>
 void ASDTAIController::OnPossess(APawn* pawn)
 {
     Super::OnPossess(pawn);
@@ -89,16 +107,28 @@ void ASDTAIController::OnPossess(APawn* pawn)
     }
 }
 
+/// <summary>
+/// Acquires the agent's current target position.
+/// </summary>
+/// <returns>The agent's current target position.</returns>
 FVector ASDTAIController::GetCurrentTargetPosition()
 {
     return GetPathFollowingComponent()->GetCurrentTargetLocation();
 }
 
+/// <summary>
+/// Callback when the agent moves to a target.
+/// </summary>
 void ASDTAIController::OnMoveToTarget()
 {
     m_ReachedTarget = false;
 }
 
+/// <summary>
+/// Callback when agent movement is completed.
+/// </summary>
+/// <param name="RequestID">The movement request ID.</param>
+/// <param name="Result">The path following result.</param>
 void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
     Super::OnMoveCompleted(RequestID, Result);
@@ -106,6 +136,9 @@ void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollow
     m_ReachedTarget = true;
 }
 
+/// <summary>
+/// Displays the agent's navigation path on the navmesh.
+/// </summary>
 void ASDTAIController::ShowNavigationPath()
 {
     if (UPathFollowingComponent* pathFollowingComponent = GetPathFollowingComponent())
@@ -128,6 +161,10 @@ void ASDTAIController::ShowNavigationPath()
     }
 }
 
+/// <summary>
+/// Determines if the player is seen by the agent.
+/// </summary>
+/// <returns>`true` if the player is seen by the agent, `false` otherwise.</returns>
 bool ASDTAIController::IsPlayerSeen()
 {
     //finish jump before updating AI state
@@ -163,6 +200,11 @@ bool ASDTAIController::IsPlayerSeen()
 
 }
 
+/// <summary>
+/// Determines if the agent has a line of sight to the player on detection hit.
+/// </summary>
+/// <param name="hit">The detection hit to check.</param>
+/// <returns></returns>
 bool ASDTAIController::HasLoSOnHit(const FHitResult& hit)
 {
     if (!hit.GetComponent())
@@ -183,6 +225,9 @@ bool ASDTAIController::HasLoSOnHit(const FHitResult& hit)
     return losHit.GetActor() == nullptr;
 }
 
+/// <summary>
+/// Callback when interrupted.
+/// </summary>
 void ASDTAIController::AIStateInterrupted()
 {
     StopMovement();
@@ -191,6 +236,11 @@ void ASDTAIController::AIStateInterrupted()
     m_ReachedTarget = true;
 }
 
+/// <summary>
+/// Determines the the detection hit with the highest priority.
+/// </summary>
+/// <param name="hits">The hits to check.</param>
+/// <param name="outDetectionHit">Output parameter where the highest priority hit is written.</param>
 void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit)
 {
     for (const FHitResult& hit : hits)
