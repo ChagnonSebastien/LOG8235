@@ -1,5 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+/*
+* BTTask_ExpectPlayerNotSeen.h
+* Authors:
+    - Sebastien Chagnon
+    - Andy Lam
+    - Jason Thai
+    - Alexandre Ramtoula
+    - Philippe Trempe
+*/
 #pragma once
 
 #include "CoreMinimal.h"
@@ -9,7 +16,7 @@
 #include "BTTask_ExpectPlayerNotSeen.generated.h"
 
 /**
- * 
+ * Behavior Tree Task ExpectPlayerNotSeen class.
  */
 UCLASS()
 class SOFTDESIGNTRAINING_API UBTTask_ExpectPlayerNotSeen : public UBTTask_BlackboardBase

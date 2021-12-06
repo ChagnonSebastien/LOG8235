@@ -1,4 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+/*
+* BTTask_ReleaseTimeAllocation.h
+* Authors:
+    - Sebastien Chagnon
+    - Andy Lam
+    - Jason Thai
+    - Alexandre Ramtoula
+    - Philippe Trempe
+*/
 
 #pragma once
 
@@ -8,7 +16,7 @@
 #include "BTTask_ReleaseTimeAllocation.generated.h"
 
 /**
- * 
+ * Behavior Tree Task ReleaseTimeAllocation class.
  */
 UCLASS()
 class SOFTDESIGNTRAINING_API UBTTask_ReleaseTimeAllocation : public UBTTask_BlackboardBase

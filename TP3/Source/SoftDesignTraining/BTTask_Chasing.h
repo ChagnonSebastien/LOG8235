@@ -1,5 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+/*
+* BTTask_Chasing.h
+* Authors:
+    - Sebastien Chagnon
+    - Andy Lam
+    - Jason Thai
+    - Alexandre Ramtoula
+    - Philippe Trempe
+*/
 #pragma once
 
 #include "SDTAIController.h"
@@ -18,7 +25,7 @@
 #include "BTTask_Chasing.generated.h"
 
 /**
- * 
+ * Behavior Tree Task Chasing class.
  */
 UCLASS()
 class SOFTDESIGNTRAINING_API UBTTask_Chasing : public UBTTask_BlackboardBase

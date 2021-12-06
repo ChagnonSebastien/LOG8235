@@ -1,6 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
+/*
+* BTTask_ExpectPlayerNotSeen.cpp
+* Authors:
+    - Sebastien Chagnon
+    - Andy Lam
+    - Jason Thai
+    - Alexandre Ramtoula
+    - Philippe Trempe
+*/
 #include "BTTask_ExpectPlayerNotSeen.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Bool.h"
 #include "SoftDesignTraining.h"
@@ -8,6 +14,11 @@
 #include "AiAgentGroupManager.h"
 #include "SoftDesignTrainingCharacter.h"
 
+/**
+* Update profiling scope, check wether AI controller sees the target player, update LKP info, and lastly log execution time.
+* @param OwnerComp The behavior Tree
+* @return Returns node succeeded if the AI controller sees the target player, else node failed.
+*/
 EBTNodeResult::Type UBTTask_ExpectPlayerNotSeen::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());

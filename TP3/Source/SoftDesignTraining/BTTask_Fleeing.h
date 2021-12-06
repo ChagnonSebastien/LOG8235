@@ -1,6 +1,15 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+/*
+* BTTask_Patrol.h
+* Authors:
+    - Sebastien Chagnon
+    - Andy Lam
+    - Jason Thai
+    - Alexandre Ramtoula
+    - Philippe Trempe
+*/
 
 #pragma once
+
 #include "SDTAIController.h"
 #include "SoftDesignTraining.h"
 #include "SDTCollectible.h"
@@ -18,7 +27,7 @@
 #include "BTTask_Fleeing.generated.h"
 
 /**
- * 
+ * Behavior Tree Task Fleeing class.
  */
 UCLASS()
 class SOFTDESIGNTRAINING_API UBTTask_Fleeing : public UBTTask_BlackboardBase

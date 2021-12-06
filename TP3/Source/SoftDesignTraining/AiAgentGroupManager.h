@@ -1,3 +1,12 @@
+/*
+* AiAgentGroupManager.h
+* Authors:
+    - Sebastien Chagnon
+    - Andy Lam
+    - Jason Thai
+    - Alexandre Ramtoula
+    - Philippe Trempe
+*/
 #pragma once
 
 #include "CoreMinimal.h"
@@ -7,7 +16,7 @@
 #include "CoreMinimal.h"
 
 /**
- *
+ * AI agent group manager class.
  */
 class SOFTDESIGNTRAINING_API AiAgentGroupManager
 {

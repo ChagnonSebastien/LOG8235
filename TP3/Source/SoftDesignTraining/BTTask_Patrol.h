@@ -1,6 +1,15 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+/*
+* BTTask_Patrol.h
+* Authors:
+    - Sebastien Chagnon
+    - Andy Lam
+    - Jason Thai
+    - Alexandre Ramtoula
+    - Philippe Trempe
+*/
 
 #pragma once
+
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Bool.h"
 #include "SDTAIController.h"
 #include "SoftDesignTraining.h"
@@ -17,7 +26,7 @@
 #include "BTTask_Patrol.generated.h"
 
 /**
- * 
+ * Behavior Tree Task Patrol class.
  */
 UCLASS()
 class SOFTDESIGNTRAINING_API UBTTask_Patrol : public UBTTask_BlackboardBase

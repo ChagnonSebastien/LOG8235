@@ -1,9 +1,19 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
+/*
+* BTTask_CustomMoveTo.cpp
+* Authors:
+    - Sebastien Chagnon
+    - Andy Lam
+    - Jason Thai
+    - Alexandre Ramtoula
+    - Philippe Trempe
+*/
 #include "BTTask_CustomMoveTo.h"
 
-
+/**
+* Update profiling scope, move AI controller to the target location, and lastly log execution time.
+* @param OwnerComp The behavior Tree
+* @return Returns node succeeded.
+*/
 EBTNodeResult::Type UBTTask_CustomMoveTo::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
     ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());

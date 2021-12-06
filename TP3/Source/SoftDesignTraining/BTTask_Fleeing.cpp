@@ -1,8 +1,19 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+/*
+* BTTask_Fleeing.cpp
+* Authors:
+    - Sebastien Chagnon
+    - Andy Lam
+    - Jason Thai
+    - Alexandre Ramtoula
+    - Philippe Trempe
+*/
 
 #include "BTTask_Fleeing.h"
-
+/**
+* Update profiling scope, update the best fleeing location for the AI agent, and lastly log execution time.
+* @param OwnerComp The behavior Tree
+* @return Returns node succeeded if the player is powered up, else node failed
+*/
 EBTNodeResult::Type UBTTask_Fleeing::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
@@ -14,7 +25,7 @@ EBTNodeResult::Type UBTTask_Fleeing::ExecuteTask(UBehaviorTreeComponent& OwnerCo
     ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
     if (!playerCharacter)
         throw "This method should not be called in the first place if the player is not playing.";
-
+        
     for (TActorIterator<ASDTFleeLocation> actorIterator(GetWorld(), ASDTFleeLocation::StaticClass()); actorIterator; ++actorIterator)
     {
         ASDTFleeLocation* fleeLocation = Cast<ASDTFleeLocation>(*actorIterator);

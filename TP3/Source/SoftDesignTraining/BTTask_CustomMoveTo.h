@@ -1,5 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+/*
+* BTTask_CustomMoveTo.h
+* Authors:
+    - Sebastien Chagnon
+    - Andy Lam
+    - Jason Thai
+    - Alexandre Ramtoula
+    - Philippe Trempe
+*/
 #pragma once
 
 #include "CoreMinimal.h"
@@ -8,7 +15,7 @@
 #include "BTTask_CustomMoveTo.generated.h"
 
 /**
- * 
+ * Behavior Tree Task CustomMoveTo class.
  */
 UCLASS()
 class SOFTDESIGNTRAINING_API UBTTask_CustomMoveTo : public UBTTask_BlackboardBase
