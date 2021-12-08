@@ -10,9 +10,9 @@
 
 #include "BTTask_RequestAllocation.h"
 /**
-* Request budget allocation.
+* Request budget allocation to the time budget allocator.
 * @param OwnerComp The behavior Tree
-* @return Returns Succeeded if the AI could request budget allocation, else False.
+* @return Returns Succeeded if the AI could request budget allocation, else fails.
 */
 EBTNodeResult::Type UBTTask_RequestAllocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {

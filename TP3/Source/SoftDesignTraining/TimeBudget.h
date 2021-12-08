@@ -1,5 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+/*
+* AiAgentGroupManager.cpp
+* Authors:
+	- Sebastien Chagnon
+	- Andy Lam
+	- Jason Thai
+	- Alexandre Ramtoula
+	- Philippe Trempe
+*/
 #pragma once
 
 #include "CoreMinimal.h"
@@ -18,9 +25,15 @@ public:
 	// Sets default values for this actor's properties
 	ATimeBudget();
 
+	/// <summary>
+	/// The target time of the Budget in seconds. A bigger value allows more AIs logic to be run each frame.
+	/// </summary>
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
 	float TargetTime = 0.01f;
 
+	/// <summary>
+	/// A readonly variable showing through the blueprints the amount of AIs allowed to run each tick.
+	/// </summary>
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
 	int m_acceptAmountPerFrame = 10;
 
